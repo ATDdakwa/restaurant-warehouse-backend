@@ -133,6 +133,13 @@ public class WarehouseService {
                 .filter(i -> i.getMeatType() == MeatType.BEEF)
                 .mapToDouble(Inventory::getWeight).sum();
 
+        double totalPiecesChicken = availableInventory.stream()
+                .filter(i -> i.getMeatType() == MeatType.CHICKEN && i.getPieces() != null)
+                .mapToInt(Inventory::getPieces).sum();
+        double totalPiecesBeef = availableInventory.stream()
+                .filter(i -> i.getMeatType() == MeatType.BEEF && i.getPieces() != null)
+                .mapToInt(Inventory::getPieces).sum();
+
         double averageYield = processingRepository.findAll().stream().mapToDouble(Processing::getYieldPercentage).average().orElse(0);
         double totalWastage = processingRepository.findAll().stream().mapToDouble(Processing::getWastageWeight).sum();
         double wastagePercentage = totalReceived > 0 ? (totalWastage / totalReceived) * 100 : 0;
@@ -145,6 +152,8 @@ public class WarehouseService {
                 currentStock,
                 totalStockChicken,
                 totalStockBeef,
+                totalPiecesChicken,
+                totalPiecesBeef,
                 averageYield,
                 wastagePercentage,
                 pendingRequisitions

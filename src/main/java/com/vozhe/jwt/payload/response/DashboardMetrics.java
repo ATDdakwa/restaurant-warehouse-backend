@@ -15,6 +15,8 @@ public class DashboardMetrics {
     private double currentStock;
     private double totalStockChicken;
     private double totalStockBeef;
+    private double totalPiecesChicken;
+    private double totalPiecesBeef;
     private double averageYield;
     private double wastagePercentage;
     private long pendingRequisitions;
