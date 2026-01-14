@@ -7,6 +7,7 @@ import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.repository.warehouse.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -67,30 +68,35 @@ public class WarehouseService {
             throw new InvalidInputException("Distribution items are required");
         }
 
-        double totalWeight = 0;
+        double totalApprovedWeight = 0;
         for (DistributionItem item : distribution.getItems()) {
             Inventory inventory = inventoryRepository.findById(item.getInventoryId())
                     .orElseThrow(() -> new InvalidInputException("Inventory item not found"));
 
-            if (inventory.getWeight() < item.getRequestedWeight()) {
-                throw new InvalidInputException("Not enough stock for item " + inventory.getId());
+            if (inventory.getPieces() == null || inventory.getPieces() < item.getRequestedPieces()) {
+                throw new InvalidInputException("Not enough pieces for item " + inventory.getId());
             }
 
-            inventory.setWeight(inventory.getWeight() - item.getRequestedWeight());
-            item.setIssuedWeight(item.getRequestedWeight());
+            inventory.setPieces(inventory.getPieces() - item.getRequestedPieces());
             inventoryRepository.save(inventory);
-            totalWeight += item.getIssuedWeight();
+            
+            item.setApprovedWeight(0.0); // Will be set during approval
+            item.setIssuedWeight(0.0); // Will be set during approval
+            totalApprovedWeight += item.getApprovedWeight();
         }
 
-        distribution.setTotalWeight(totalWeight);
+        distribution.setTotalWeight(totalApprovedWeight);
         return distributionRepository.save(distribution);
     }
 
+    @Transactional
     public List<Distribution> getAllDistributions() {
-        return distributionRepository.findAll();
+        List<Distribution> distributions = distributionRepository.findAll();
+        distributions.forEach(distribution -> distribution.getItems().size()); // Initialize items
+        return distributions;
     }
 
-    public Distribution approveDistribution(Long id) {
+    public Distribution approveDistribution(Long id, List<DistributionItem> approvedItems) {
         Distribution distribution = distributionRepository.findById(id)
                 .orElseThrow(() -> new InvalidInputException("Distribution record not found"));
 
@@ -98,18 +104,29 @@ public class WarehouseService {
             throw new InvalidInputException("Only pending distributions can be approved");
         }
 
-        for (DistributionItem item : distribution.getItems()) {
-            Inventory inventory = inventoryRepository.findById(item.getInventoryId())
-                    .orElseThrow(() -> new InvalidInputException("Inventory item not found"));
+        double totalApprovedWeight = 0;
+        for (DistributionItem approvedItem : approvedItems) {
+            DistributionItem existingItem = distribution.getItems().stream()
+                    .filter(item -> item.getId().equals(approvedItem.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new InvalidInputException("Distribution item not found: " + approvedItem.getId()));
 
-            if (inventory.getWeight() < item.getRequestedWeight()) {
-                throw new InvalidInputException("Not enough stock for item " + inventory.getId());
+            Inventory inventory = inventoryRepository.findById(existingItem.getInventoryId())
+                    .orElseThrow(() -> new InvalidInputException("Inventory item not found: " + existingItem.getInventoryId()));
+
+            if (inventory.getWeight() == null || inventory.getWeight() < approvedItem.getApprovedWeight()) {
+                throw new InvalidInputException("Not enough stock (weight) for item " + inventory.getId());
             }
 
-            inventory.setWeight(inventory.getWeight() - item.getRequestedWeight());
+            inventory.setWeight(inventory.getWeight() - approvedItem.getApprovedWeight());
             inventoryRepository.save(inventory);
+
+            existingItem.setApprovedWeight(approvedItem.getApprovedWeight());
+            existingItem.setIssuedWeight(approvedItem.getApprovedWeight());
+            totalApprovedWeight += approvedItem.getApprovedWeight();
         }
 
+        distribution.setTotalWeight(totalApprovedWeight);
         distribution.setStatus("completed");
         return distributionRepository.save(distribution);
     }

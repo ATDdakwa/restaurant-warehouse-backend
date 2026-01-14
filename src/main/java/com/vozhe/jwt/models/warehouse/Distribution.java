@@ -20,7 +20,7 @@ public class Distribution extends Base {
     private LocalDate issuedDate;
     private String issuedBy;
     private String approvedBy;
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "distribution_id")
     private List<DistributionItem> items;
     private Double totalWeight;

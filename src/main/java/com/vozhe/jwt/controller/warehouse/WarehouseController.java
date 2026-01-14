@@ -4,6 +4,7 @@ package com.vozhe.jwt.controller.warehouse;
 import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.service.warehouse.WarehouseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,7 +56,7 @@ public class WarehouseController {
     }
 
     // Distribution endpoints
-    @PostMapping("/distribution")
+    @PostMapping(value = "/distribution", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Distribution> createDistribution(@RequestBody Distribution distribution) {
         return ResponseEntity.ok(warehouseService.saveDistribution(distribution));
     }
@@ -66,8 +67,8 @@ public class WarehouseController {
     }
 
     @PutMapping("/distribution/{id}/approve")
-    public ResponseEntity<Distribution> approveDistribution(@PathVariable Long id) {
-        return ResponseEntity.ok(warehouseService.approveDistribution(id));
+    public ResponseEntity<Distribution> approveDistribution(@PathVariable Long id, @RequestBody List<DistributionItem> approvedItems) {
+        return ResponseEntity.ok(warehouseService.approveDistribution(id, approvedItems));
     }
     @GetMapping("/reports")
     public ResponseEntity<com.vozhe.jwt.payload.response.ReportsData> getReportsData() {
