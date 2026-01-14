@@ -2,6 +2,7 @@
 package com.vozhe.jwt.models.warehouse;
 
 import com.vozhe.jwt.enums.MeatType;
+import com.vozhe.jwt.enums.ProcessingStatus;
 import com.vozhe.jwt.enums.QualityStatus;
 import com.vozhe.jwt.models.Base;
 import lombok.AllArgsConstructor;
@@ -32,4 +33,11 @@ public class Receiving extends Base {
     private QualityStatus qualityStatus;
     private String qualityNotes;
     private String receivedBy;
+
+    @Enumerated(EnumType.STRING)
+    private ProcessingStatus status = ProcessingStatus.PENDING;
+
+    private Double processedWeight = 0.0;
+
+    private Integer processedQuantity = 0;
 }

@@ -43,17 +43,6 @@ public class WarehouseController {
         return ResponseEntity.ok(warehouseService.getAllReceivings());
     }
 
-    // Processing endpoints
-    @PostMapping("/processing")
-    public ResponseEntity<Processing> createProcessing(@RequestBody Processing processing) {
-        return ResponseEntity.ok(warehouseService.saveProcessing(processing));
-    }
-
-    @GetMapping("/processing")
-    public ResponseEntity<List<Processing>> getAllProcessings() {
-        return ResponseEntity.ok(warehouseService.getAllProcessings());
-    }
-
     // Inventory endpoints
     @PostMapping("/inventory")
     public ResponseEntity<Inventory> createInventory(@RequestBody Inventory inventory) {

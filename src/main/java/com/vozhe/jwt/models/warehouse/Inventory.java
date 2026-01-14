@@ -1,8 +1,5 @@
-
 package com.vozhe.jwt.models.warehouse;
 
-import com.vozhe.jwt.enums.BeefCut;
-import com.vozhe.jwt.enums.ChickenCut;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.enums.StorageLocation;
 import com.vozhe.jwt.models.Base;
@@ -23,11 +20,9 @@ public class Inventory extends Base {
     private String batchNumber;
     @Enumerated(EnumType.STRING)
     private MeatType meatType;
-    @Enumerated(EnumType.STRING)
-    private ChickenCut chickenCut;
-    @Enumerated(EnumType.STRING)
-    private BeefCut beefCut;
+    private String cut;
     private Double weight;
+    private Integer pieces;
     @Enumerated(EnumType.STRING)
     private StorageLocation storageLocation;
     private LocalDate expiryDate;

@@ -20,7 +20,8 @@ public class Processing extends Base {
     private String batchNumber;
     @Enumerated(EnumType.STRING)
     private MeatType meatType;
-    private Double inputWeight;
+    private Integer quantity; // birds/carcasses processed in this step
+    private Double weight; // weight processed in this step
     private LocalDate processedDate;
     private String processedBy;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -29,4 +30,5 @@ public class Processing extends Base {
     private Double totalOutputWeight;
     private Double wastageWeight;
     private Double yieldPercentage;
+    private Boolean isCompleted;
 }

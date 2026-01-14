@@ -2,14 +2,12 @@
 package com.vozhe.jwt.service.warehouse;
 
 import com.vozhe.jwt.enums.MeatType;
-import com.vozhe.jwt.enums.StorageLocation;
 import com.vozhe.jwt.exceptions.InvalidInputException;
 import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.repository.warehouse.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -18,9 +16,10 @@ public class WarehouseService {
 
     private final SupplierRepository supplierRepository;
     private final ReceivingRepository receivingRepository;
-    private final ProcessingRepository processingRepository;
     private final InventoryRepository inventoryRepository;
     private final DistributionRepository distributionRepository;
+    private final ProcessingRepository processingRepository;
+
 
     // Supplier actions
     public Supplier saveSupplier(Supplier supplier) {
@@ -49,58 +48,6 @@ public class WarehouseService {
 
     public List<Receiving> getAllReceivings() {
         return receivingRepository.findAll();
-    }
-
-    // Processing actions
-    public Processing saveProcessing(Processing processing) {
-        // Business logic for processing
-        if (processing.getReceivingId() == null) {
-            throw new InvalidInputException("Receiving ID is required");
-        }
-        Receiving receiving = receivingRepository.findById(processing.getReceivingId())
-                .orElseThrow(() -> new InvalidInputException("Receiving record not found"));
-
-        if (processing.getInputWeight() > receiving.getTotalWeight()) {
-            throw new InvalidInputException("Input weight cannot be greater than the received weight");
-        }
-
-        double totalOutputWeight = processing.getOutputs().stream()
-                .mapToDouble(ProcessingOutput::getWeight)
-                .sum();
-        processing.setTotalOutputWeight(totalOutputWeight);
-
-        double wastageWeight = processing.getInputWeight() - totalOutputWeight;
-        processing.setWastageWeight(wastageWeight);
-
-        double yieldPercentage = (totalOutputWeight / processing.getInputWeight()) * 100;
-        processing.setYieldPercentage(yieldPercentage);
-
-        Processing savedProcessing = processingRepository.save(processing);
-
-        // Create inventory items from outputs
-        for (ProcessingOutput output : savedProcessing.getOutputs()) {
-            Inventory inventory = new Inventory();
-            inventory.setBatchNumber(savedProcessing.getBatchNumber());
-            inventory.setMeatType(savedProcessing.getMeatType());
-            if (savedProcessing.getMeatType() == MeatType.CHICKEN) {
-                inventory.setChickenCut(output.getChickenCut());
-            } else {
-                inventory.setBeefCut(output.getBeefCut());
-            }
-            inventory.setWeight(output.getWeight());
-            inventory.setStorageLocation(StorageLocation.CHILLER); // Or determine based on cut
-            inventory.setExpiryDate(LocalDate.now().plusDays(5)); // Example expiry
-            inventory.setReceivedDate(receiving.getDeliveryDate());
-            inventory.setCostPerKg(0.0); // Example cost
-            inventory.setStatus("available");
-            inventoryRepository.save(inventory);
-        }
-
-        return savedProcessing;
-    }
-
-    public List<Processing> getAllProcessings() {
-        return processingRepository.findAll();
     }
 
     // Inventory actions
@@ -173,9 +120,19 @@ public class WarehouseService {
         double totalIssued = distributionRepository.findAll().stream()
                 .filter(d -> "completed".equals(d.getStatus()))
                 .mapToDouble(Distribution::getTotalWeight).sum();
-        double currentStock = inventoryRepository.findAll().stream()
+        
+        List<Inventory> availableInventory = inventoryRepository.findAll().stream()
                 .filter(i -> "available".equals(i.getStatus()))
+                .toList();
+
+        double currentStock = availableInventory.stream().mapToDouble(Inventory::getWeight).sum();
+        double totalStockChicken = availableInventory.stream()
+                .filter(i -> i.getMeatType() == MeatType.CHICKEN)
                 .mapToDouble(Inventory::getWeight).sum();
+        double totalStockBeef = availableInventory.stream()
+                .filter(i -> i.getMeatType() == MeatType.BEEF)
+                .mapToDouble(Inventory::getWeight).sum();
+
         double averageYield = processingRepository.findAll().stream().mapToDouble(Processing::getYieldPercentage).average().orElse(0);
         double totalWastage = processingRepository.findAll().stream().mapToDouble(Processing::getWastageWeight).sum();
         double wastagePercentage = totalReceived > 0 ? (totalWastage / totalReceived) * 100 : 0;
@@ -186,6 +143,8 @@ public class WarehouseService {
                 totalProcessed,
                 totalIssued,
                 currentStock,
+                totalStockChicken,
+                totalStockBeef,
                 averageYield,
                 wastagePercentage,
                 pendingRequisitions
