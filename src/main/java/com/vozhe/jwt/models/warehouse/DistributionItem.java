@@ -1,8 +1,6 @@
 
 package com.vozhe.jwt.models.warehouse;
 
-import com.vozhe.jwt.enums.BeefCut;
-import com.vozhe.jwt.enums.ChickenCut;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.models.Base;
 import lombok.AllArgsConstructor;
@@ -21,10 +19,7 @@ public class DistributionItem extends Base {
     private Long inventoryId;
     @Enumerated(EnumType.STRING)
     private MeatType meatType;
-    @Enumerated(EnumType.STRING)
-    private ChickenCut chickenCut;
-    @Enumerated(EnumType.STRING)
-    private BeefCut beefCut;
+    private String cut;
     private Double requestedWeight;
     private Double issuedWeight;
     private String batchNumber;
