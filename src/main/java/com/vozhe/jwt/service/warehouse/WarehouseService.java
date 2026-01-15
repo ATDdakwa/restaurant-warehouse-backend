@@ -3,8 +3,10 @@ package com.vozhe.jwt.service.warehouse;
 
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.exceptions.InvalidInputException;
+import com.vozhe.jwt.models.settings.GlobalSettings;
 import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.repository.warehouse.*;
+import com.vozhe.jwt.service.settings.GlobalSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,7 @@ public class WarehouseService {
     private final InventoryRepository inventoryRepository;
     private final DistributionRepository distributionRepository;
     private final ProcessingRepository processingRepository;
+    private final GlobalSettingsService globalSettingsService;
 
 
     // Supplier actions
@@ -104,6 +107,11 @@ public class WarehouseService {
             throw new InvalidInputException("Only pending distributions can be approved");
         }
 
+        GlobalSettings globalSettings = globalSettingsService.getGlobalSettings();
+        if (globalSettings == null) {
+            throw new InvalidInputException("Global settings for cost per kg not found. Please configure them.");
+        }
+
         double totalApprovedWeight = 0;
         for (DistributionItem approvedItem : approvedItems) {
             DistributionItem existingItem = distribution.getItems().stream()
@@ -120,6 +128,21 @@ public class WarehouseService {
 
             inventory.setWeight(inventory.getWeight() - approvedItem.getApprovedWeight());
             inventoryRepository.save(inventory);
+
+            // Calculate cost
+            double costPerKg = 0.0;
+            if (existingItem.getMeatType() == MeatType.CHICKEN) {
+                if (globalSettings.getCostPerKgChicken() == null) {
+                    throw new InvalidInputException("Cost per kg for Chicken not configured in global settings.");
+                }
+                costPerKg = globalSettings.getCostPerKgChicken();
+            } else if (existingItem.getMeatType() == MeatType.BEEF) {
+                if (globalSettings.getCostPerKgBeef() == null) {
+                    throw new InvalidInputException("Cost per kg for Beef not configured in global settings.");
+                }
+                costPerKg = globalSettings.getCostPerKgBeef();
+            }
+            existingItem.setCost(approvedItem.getApprovedWeight() * costPerKg);
 
             existingItem.setApprovedWeight(approvedItem.getApprovedWeight());
             existingItem.setIssuedWeight(approvedItem.getApprovedWeight());

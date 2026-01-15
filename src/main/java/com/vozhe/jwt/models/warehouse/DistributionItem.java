@@ -24,4 +24,5 @@ public class DistributionItem extends Base {
     private Double approvedWeight; // Renamed from requestedWeight
     private Double issuedWeight; // Made nullable
     private String batchNumber;
+    private Double cost;
 }

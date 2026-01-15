@@ -33,7 +33,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/swagger-ui.html",
             "/api/authenticate/",
             "/whitelist/**",
-            "/api/warehouse/**"
+            "/api/warehouse/**",
+            "/api/settings/**"
+
     };
 
     @Override
