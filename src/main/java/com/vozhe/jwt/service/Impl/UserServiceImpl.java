@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List; // Import List
 import java.util.Optional;
 
 @Service
@@ -52,6 +53,45 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 
         return ResponseEntity.ok(new BaseResult("00", "User created Successfully", 200 ));
 
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
+    public ResponseEntity<BaseResult> updateUser(Long id, User userDetails) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (!userOptional.isPresent()) {
+            throw new UsernameNotFoundException("User not found with id: " + id);
+        }
+
+        User existingUser = userOptional.get();
+        existingUser.setFirstName(userDetails.getFirstName());
+        existingUser.setLastName(userDetails.getLastName());
+        existingUser.setPhoneNumber(userDetails.getPhoneNumber());
+        existingUser.setIdNumber(userDetails.getIdNumber());
+        existingUser.setAddress(userDetails.getAddress());
+        existingUser.setDOB(userDetails.getDOB());
+        existingUser.setRoles(userDetails.getRoles());
+
+        // Only update password if a new one is provided
+        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+            existingUser.setPassword(encryptPassword(userDetails.getPassword()));
+        }
+
+        userRepository.save(existingUser);
+        return ResponseEntity.ok(new BaseResult("00", "User updated Successfully", 200));
+    }
+
+    @Override
+    public ResponseEntity<BaseResult> deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new UsernameNotFoundException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
+        return ResponseEntity.ok(new BaseResult("00", "User deleted Successfully", 200));
     }
 
 

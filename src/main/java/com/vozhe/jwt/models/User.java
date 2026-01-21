@@ -23,22 +23,11 @@ public class User extends BaseEntity<String> {
     private String lastName;
     private String phoneNumber;
     private String idNumber;
-    private String licenseNumber;
-    private String vehicleNumberPlates;
-    private String city;
-    private String country;
     private String address;
     private Date DOB;
     private String password;
     @Column(unique=true)
     private String username;
     private String roles;
-    private String userProfilePicture;
-    private String idPicture;
-    private String vehicleRegPicture;
-    private String driverLicensePicture;
-    private String frontCarPicture;
-    private String driverPicture;
-    private String backCarPicture;
 
 }

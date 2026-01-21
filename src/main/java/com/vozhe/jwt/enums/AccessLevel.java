@@ -2,9 +2,9 @@ package com.vozhe.jwt.enums;
 
 public enum AccessLevel {
 
-    DRIVER,
+    STOCK_CONTROLLER,
 
-    USER,
+    SHOP,
 
     ADMIN
 }
