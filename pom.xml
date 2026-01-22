@@ -82,15 +82,11 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
+                    <!-- Removed Lombok exclude to ensure getters/setters are generated -->
                 </configuration>
             </plugin>
         </plugins>
+        <finalName>restaurant-warehouse-service</finalName>
     </build>
 
 </project>
