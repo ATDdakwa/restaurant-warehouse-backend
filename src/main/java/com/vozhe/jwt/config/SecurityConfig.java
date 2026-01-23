@@ -36,7 +36,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/api/authenticate/",
             "/whitelist/**",
             "/api/warehouse/**",
-            "/api/settings/**"
+            "/api/settings/**",
+            "/api/meats/**",
+            "/api/payment-settings/**"
 
     };
 

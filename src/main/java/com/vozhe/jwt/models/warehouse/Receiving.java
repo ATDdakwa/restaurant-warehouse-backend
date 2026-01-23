@@ -21,8 +21,7 @@ import java.time.LocalDate;
 public class Receiving extends Base {
     private String supplierId;
     private String supplierName;
-    @Enumerated(EnumType.STRING)
-    private MeatType meatType;
+    private String meatType;
     private LocalDate deliveryDate;
     private String batchNumber;
     private Integer quantity;
@@ -40,4 +39,8 @@ public class Receiving extends Base {
     private Double processedWeight = 0.0;
 
     private Integer processedQuantity = 0;
+
+    private String paymentType;
+    // retrieved from DB
+    private String currency;
 }

@@ -1,6 +1,7 @@
 com/vozhe/jwt/repository/warehouse/DistributionRepository.class
 com/vozhe/jwt/enums/Status.class
 com/vozhe/jwt/controller/warehouse/ProcessingController.class
+com/vozhe/jwt/models/OutputCut.class
 com/vozhe/jwt/controller/UserController.class
 com/vozhe/jwt/controller/reports/ReportController.class
 com/vozhe/jwt/models/settings/GlobalSettings.class
@@ -16,6 +17,7 @@ com/vozhe/jwt/models/BaseEntity.class
 com/vozhe/jwt/repository/UserRepository.class
 com/vozhe/jwt/service/AccountCreationService.class
 com/vozhe/jwt/models/UserRole.class
+com/vozhe/jwt/models/Meat.class
 com/vozhe/jwt/exceptions/ValidateRequestsHandler.class
 com/vozhe/jwt/enums/MaritalStatus.class
 com/vozhe/jwt/models/warehouse/Inventory.class
@@ -33,6 +35,7 @@ com/vozhe/jwt/repository/warehouse/SupplierRepository.class
 com/vozhe/jwt/models/warehouse/Supplier.class
 com/vozhe/jwt/enums/StorageLocation.class
 com/vozhe/jwt/service/UserService.class
+com/vozhe/jwt/service/MeatService.class
 com/vozhe/jwt/repository/warehouse/ProcessingRepository.class
 com/vozhe/jwt/models/warehouse/Processing.class
 com/vozhe/jwt/models/warehouse/DistributionItem.class
@@ -43,10 +46,12 @@ com/vozhe/jwt/controller/GeneralController.class
 com/vozhe/jwt/enums/BeefCut.class
 com/vozhe/jwt/enums/Gender.class
 com/vozhe/jwt/config/CORSConfig.class
+com/vozhe/jwt/repository/OutputCutRepository.class
 com/vozhe/jwt/exceptions/UserExceptionHandlerControllerAdvice.class
 com/vozhe/jwt/payload/BaseResult.class
 com/vozhe/jwt/repository/warehouse/ReceivingRepository.class
 com/vozhe/jwt/models/warehouse/Receiving.class
+com/vozhe/jwt/controller/MeatController.class
 com/vozhe/jwt/models/User.class
 com/vozhe/jwt/models/StockTakeRecord.class
 com/vozhe/jwt/service/reports/ReportService.class
@@ -56,6 +61,8 @@ com/vozhe/jwt/models/warehouse/ProcessingOutput.class
 com/vozhe/jwt/repository/UserRoleRepository.class
 com/vozhe/jwt/exceptions/InvalidInputException.class
 com/vozhe/jwt/payload/response/UserDTO.class
+com/vozhe/jwt/service/MeatServiceImpl.class
+com/vozhe/jwt/repository/MeatRepository.class
 com/vozhe/jwt/models/Base.class
 com/vozhe/jwt/service/warehouse/WarehouseService.class
 com/vozhe/jwt/service/StockTakeRecordService.class
