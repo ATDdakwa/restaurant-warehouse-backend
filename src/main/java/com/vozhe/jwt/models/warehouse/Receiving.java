@@ -22,6 +22,12 @@ public class Receiving extends Base {
     private String supplierId;
     private String supplierName;
     private String meatType;
+
+    // ADD THESE TWO FIELDS
+    private String productType;  // To store the type (e.g., "meats", "1" for Dry Goods, etc.)
+    private String productId;    // To store the actual product ID when it's not meat
+    private String productName;  // To store the product name for display purposes
+
     private LocalDate deliveryDate;
     private String batchNumber;
     private Integer quantity;
