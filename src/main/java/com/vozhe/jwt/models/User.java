@@ -29,5 +29,6 @@ public class User extends BaseEntity<String> {
     @Column(unique=true)
     private String username;
     private String roles;
+    private String shopName;
 
 }

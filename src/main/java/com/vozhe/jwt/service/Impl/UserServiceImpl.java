@@ -49,6 +49,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         toSaveUser.setPhoneNumber(user.getPhoneNumber());
         toSaveUser.setPassword(encryptPassword(user.getPassword()));
         toSaveUser.setRoles(user.getRoles());
+        toSaveUser.setShopName(user.getShopName());
         userRepository.save(toSaveUser);
 
         return ResponseEntity.ok(new BaseResult("00", "User created Successfully", 200 ));
@@ -75,6 +76,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         existingUser.setAddress(userDetails.getAddress());
         existingUser.setDOB(userDetails.getDOB());
         existingUser.setRoles(userDetails.getRoles());
+        existingUser.setShopName(userDetails.getShopName());
 
         // Only update password if a new one is provided
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {

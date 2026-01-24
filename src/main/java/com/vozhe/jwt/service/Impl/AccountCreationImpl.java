@@ -52,6 +52,7 @@ public class AccountCreationImpl implements AccountCreationService {
         UserDTO user = new UserDTO();
         user.setUsername(userResponse.get().getUsername().toUpperCase());
         user.setAuthorities(userResponse.get().getRoles());
+        user.setShopName(userResponse.get().getShopName());
 
         return ResponseEntity.ok(new JwtTokenResponse(token, user, "00"));
     }

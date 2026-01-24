@@ -8,4 +8,5 @@ import lombok.Setter;
 public class UserDTO {
     private String username;
     private String authorities;
+    private String shopName;
 }
