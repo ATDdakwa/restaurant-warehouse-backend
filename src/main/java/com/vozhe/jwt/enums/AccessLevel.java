@@ -6,5 +6,9 @@ public enum AccessLevel {
 
     SHOP,
 
-    ADMIN
+    ADMIN,
+
+    DRIVER,
+
+    MANAGER
 }

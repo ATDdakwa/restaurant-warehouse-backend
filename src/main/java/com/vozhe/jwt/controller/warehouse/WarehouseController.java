@@ -56,20 +56,49 @@ public class WarehouseController {
     }
 
     // Distribution endpoints
+    /* ================= SHOP ================= */
     @PostMapping(value = "/distribution", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Distribution> createDistribution(@RequestBody Distribution distribution) {
-        return ResponseEntity.ok(warehouseService.saveDistribution(distribution));
+    public ResponseEntity<Distribution> createDistribution(
+            @RequestBody Distribution distribution
+    ) {
+        return ResponseEntity.ok(warehouseService.requestDistribution(distribution));
     }
 
+    /* ================= ALL ROLES ================= */
     @GetMapping("/distribution")
     public ResponseEntity<List<Distribution>> getAllDistributions() {
         return ResponseEntity.ok(warehouseService.getAllDistributions());
     }
 
+    /* ================= ADMIN / STOCK CONTROLLER ================= */
     @PutMapping("/distribution/{id}/approve")
-    public ResponseEntity<Distribution> approveDistribution(@PathVariable Long id, @RequestBody List<DistributionItem> approvedItems) {
-        return ResponseEntity.ok(warehouseService.approveDistribution(id, approvedItems));
+    public ResponseEntity<Distribution> approveDistribution(
+            @PathVariable Long id,
+            @RequestBody List<DistributionItem> approvedItems
+    ) {
+        return ResponseEntity.ok(
+                warehouseService.approveDistribution(id, approvedItems)
+        );
     }
+
+    /* ================= STOCK CONTROLLER ================= */
+    @PutMapping("/distribution/{id}/issue")
+    public ResponseEntity<Distribution> issueDistribution(@PathVariable Long id) {
+        return ResponseEntity.ok(warehouseService.issueDistribution(id));
+    }
+
+    /* ================= DRIVER ================= */
+    @PutMapping("/distribution/{id}/deliver")
+    public ResponseEntity<Distribution> confirmDelivery(@PathVariable Long id) {
+        return ResponseEntity.ok(warehouseService.confirmDelivery(id));
+    }
+
+    /* ================= SHOP ================= */
+    @PutMapping("/distribution/{id}/receive")
+    public ResponseEntity<Distribution> confirmReceipt(@PathVariable Long id) {
+        return ResponseEntity.ok(warehouseService.confirmReceipt(id));
+    }
+
     @GetMapping("/reports")
     public ResponseEntity<com.vozhe.jwt.payload.response.ReportsData> getReportsData() {
         return ResponseEntity.ok(warehouseService.getReportsData());

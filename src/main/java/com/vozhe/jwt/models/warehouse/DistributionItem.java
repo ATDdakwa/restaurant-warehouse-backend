@@ -20,9 +20,14 @@ public class DistributionItem extends Base {
     @Enumerated(EnumType.STRING)
     private MeatType meatType;
     private String cut;
-    private Integer requestedPieces;
-    private Double approvedWeight; // Renamed from requestedWeight
-    private Double issuedWeight; // Made nullable
+
+    private Integer requestedPieces;   // SHOP
+
+    private Double approvedWeight;      // STOCK_CONTROLLER
+
+    private Double issuedWeight;        // STOCK_CONTROLLER
+
     private String batchNumber;
-    private Double cost;
+
+    private Double cost;                // Calculated on ISSUE
 }

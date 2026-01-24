@@ -1,6 +1,7 @@
 
 package com.vozhe.jwt.service.warehouse;
 
+import com.vozhe.jwt.enums.DistributionStatus;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.exceptions.InvalidInputException;
 import com.vozhe.jwt.models.settings.GlobalSettings;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -98,61 +100,136 @@ public class WarehouseService {
         distributions.forEach(distribution -> distribution.getItems().size()); // Initialize items
         return distributions;
     }
+    public Distribution requestDistribution(Distribution distribution) {
 
-    public Distribution approveDistribution(Long id, List<DistributionItem> approvedItems) {
-        Distribution distribution = distributionRepository.findById(id)
-                .orElseThrow(() -> new InvalidInputException("Distribution record not found"));
-
-        if (!"pending".equals(distribution.getStatus())) {
-            throw new InvalidInputException("Only pending distributions can be approved");
+        // Business logic for distribution
+        if (distribution.getItems() == null || distribution.getItems().isEmpty()) {
+            throw new InvalidInputException("Distribution items are required");
         }
 
-        GlobalSettings globalSettings = globalSettingsService.getGlobalSettings();
-        if (globalSettings == null) {
-            throw new InvalidInputException("Global settings for cost per kg not found. Please configure them.");
-        }
+        double totalApprovedWeight = 0.0;
+        for (DistributionItem item : distribution.getItems()) {
+            Inventory inventory = inventoryRepository.findById(item.getInventoryId())
+                    .orElseThrow(() -> new InvalidInputException("Inventory item not found"));
 
-        double totalApprovedWeight = 0;
-        for (DistributionItem approvedItem : approvedItems) {
-            DistributionItem existingItem = distribution.getItems().stream()
-                    .filter(item -> item.getId().equals(approvedItem.getId()))
-                    .findFirst()
-                    .orElseThrow(() -> new InvalidInputException("Distribution item not found: " + approvedItem.getId()));
-
-            Inventory inventory = inventoryRepository.findById(existingItem.getInventoryId())
-                    .orElseThrow(() -> new InvalidInputException("Inventory item not found: " + existingItem.getInventoryId()));
-
-            if (inventory.getWeight() == null || inventory.getWeight() < approvedItem.getApprovedWeight()) {
-                throw new InvalidInputException("Not enough stock (weight) for item " + inventory.getId());
+            if (inventory.getPieces() == null || inventory.getPieces() < item.getRequestedPieces()) {
+                throw new InvalidInputException("Not enough pieces for item " + inventory.getId());
             }
 
-            inventory.setWeight(inventory.getWeight() - approvedItem.getApprovedWeight());
+            inventory.setPieces(inventory.getPieces() - item.getRequestedPieces());
             inventoryRepository.save(inventory);
 
-            // Calculate cost
-            double costPerKg = 0.0;
-            if (existingItem.getMeatType() == MeatType.CHICKEN) {
-                if (globalSettings.getCostPerKgChicken() == null) {
-                    throw new InvalidInputException("Cost per kg for Chicken not configured in global settings.");
-                }
-                costPerKg = globalSettings.getCostPerKgChicken();
-            } else if (existingItem.getMeatType() == MeatType.BEEF) {
-                if (globalSettings.getCostPerKgBeef() == null) {
-                    throw new InvalidInputException("Cost per kg for Beef not configured in global settings.");
-                }
-                costPerKg = globalSettings.getCostPerKgBeef();
-            }
-            existingItem.setCost(approvedItem.getApprovedWeight() * costPerKg);
-
-            existingItem.setApprovedWeight(approvedItem.getApprovedWeight());
-            existingItem.setIssuedWeight(approvedItem.getApprovedWeight());
-            totalApprovedWeight += approvedItem.getApprovedWeight();
+            item.setApprovedWeight(0.0); // Will be set during approval
+            item.setIssuedWeight(0.0); // Will be set during approval
+            totalApprovedWeight += item.getApprovedWeight();
         }
 
+
+        distribution.setStatus(DistributionStatus.REQUESTED);
+        distribution.setRequestedAt(LocalDateTime.now());
         distribution.setTotalWeight(totalApprovedWeight);
-        distribution.setStatus("completed");
+
         return distributionRepository.save(distribution);
     }
+
+    public Distribution approveDistribution(Long id, List<DistributionItem> approvedItems) {
+
+        Distribution distribution = distributionRepository.findById(id)
+                .orElseThrow(() -> new InvalidInputException("Distribution not found"));
+
+        if (distribution.getStatus() != DistributionStatus.REQUESTED) {
+            throw new InvalidInputException("Only REQUESTED distributions can be approved");
+        }
+
+        for (DistributionItem approved : approvedItems) {
+            DistributionItem existing = distribution.getItems().stream()
+                    .filter(i -> i.getId().equals(approved.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new InvalidInputException("Item not found"));
+
+            existing.setApprovedWeight(approved.getApprovedWeight());
+        }
+
+        distribution.setStatus(DistributionStatus.APPROVED);
+        distribution.setApprovedAt(LocalDateTime.now());
+
+        return distributionRepository.save(distribution);
+    }
+
+    @Transactional
+    public Distribution issueDistribution(Long id) {
+
+        Distribution distribution = distributionRepository.findById(id)
+                .orElseThrow(() -> new InvalidInputException("Distribution not found"));
+
+        if (distribution.getStatus() != DistributionStatus.APPROVED) {
+            throw new InvalidInputException("Only APPROVED distributions can be issued");
+        }
+
+        GlobalSettings settings = globalSettingsService.getGlobalSettings();
+        double totalIssuedWeight = 0;
+
+        for (DistributionItem item : distribution.getItems()) {
+
+            Inventory inventory = inventoryRepository.findById(item.getInventoryId())
+                    .orElseThrow(() -> new InvalidInputException("Inventory not found"));
+
+            if (inventory.getWeight() < item.getApprovedWeight()) {
+                throw new InvalidInputException("Insufficient stock for " + item.getCut());
+            }
+
+            inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
+            inventoryRepository.save(inventory);
+
+            double costPerKg =
+                    item.getMeatType() == MeatType.CHICKEN
+                            ? settings.getCostPerKgChicken()
+                            : settings.getCostPerKgBeef();
+
+            item.setIssuedWeight(item.getApprovedWeight());
+            item.setCost(item.getIssuedWeight() * costPerKg);
+
+            totalIssuedWeight += item.getIssuedWeight();
+        }
+
+        distribution.setTotalWeight(totalIssuedWeight);
+        distribution.setIssuedAt(LocalDateTime.now());
+        distribution.setStatus(DistributionStatus.ISSUED);
+
+        return distributionRepository.save(distribution);
+    }
+
+    public Distribution confirmDelivery(Long id) {
+
+        Distribution distribution = distributionRepository.findById(id)
+                .orElseThrow(() -> new InvalidInputException("Distribution not found"));
+
+        if (distribution.getStatus() != DistributionStatus.ISSUED) {
+            throw new InvalidInputException("Only ISSUED distributions can be delivered");
+        }
+
+        distribution.setStatus(DistributionStatus.DELIVERED);
+        distribution.setDeliveredAt(LocalDateTime.now());
+
+        return distributionRepository.save(distribution);
+    }
+
+    public Distribution confirmReceipt(Long id) {
+
+        Distribution distribution = distributionRepository.findById(id)
+                .orElseThrow(() -> new InvalidInputException("Distribution not found"));
+
+        if (distribution.getStatus() != DistributionStatus.DELIVERED) {
+            throw new InvalidInputException("Only DELIVERED distributions can be received");
+        }
+
+        distribution.setStatus(DistributionStatus.RECEIVED);
+        distribution.setReceivedAt(LocalDateTime.now());
+
+        return distributionRepository.save(distribution);
+    }
+
+
 
     public com.vozhe.jwt.payload.response.DashboardMetrics getDashboardMetrics() {
         double totalReceived = receivingRepository.findAll().stream().mapToDouble(Receiving::getTotalWeight).sum();
@@ -199,6 +276,7 @@ public class WarehouseService {
                 pendingRequisitions
         );
     }
+
     public com.vozhe.jwt.payload.response.ReportsData getReportsData() {
         List<Receiving> receivingRecords = receivingRepository.findAll();
         List<Processing> processingRecords = processingRepository.findAll();
