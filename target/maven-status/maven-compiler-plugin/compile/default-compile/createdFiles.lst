@@ -40,6 +40,7 @@ com/vozhe/jwt/controller/warehouse/WarehouseController.class
 com/vozhe/jwt/repository/warehouse/SupplierRepository.class
 com/vozhe/jwt/models/warehouse/Supplier.class
 com/vozhe/jwt/enums/StorageLocation.class
+com/vozhe/jwt/enums/DistributionStatus.class
 com/vozhe/jwt/controller/products/ProductController.class
 com/vozhe/jwt/service/UserService.class
 com/vozhe/jwt/payload/request/PaymentSettingsDTO.class

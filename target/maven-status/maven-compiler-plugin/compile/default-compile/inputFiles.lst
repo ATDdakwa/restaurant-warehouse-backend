@@ -50,6 +50,7 @@
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/config/JwtAuthenticationEntryPoint.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/enums/Status.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/enums/AccessLevel.java
+/Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/enums/DistributionStatus.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/controller/warehouse/WarehouseController.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/repository/products/ProductRepository.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/repository/warehouse/ReceivingRepository.java
