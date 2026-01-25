@@ -5,7 +5,9 @@ import com.vozhe.jwt.enums.DistributionStatus;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.exceptions.InvalidInputException;
 import com.vozhe.jwt.models.settings.GlobalSettings;
+import com.vozhe.jwt.models.settings.PaymentType;
 import com.vozhe.jwt.models.warehouse.*;
+import com.vozhe.jwt.payload.request.PaymentDto;
 import com.vozhe.jwt.repository.warehouse.*;
 import com.vozhe.jwt.service.settings.GlobalSettingsService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,24 @@ public class WarehouseService {
         return supplierRepository.findAll();
     }
 
+    public Supplier updateSupplier(Long id, Supplier supplierDetails) {
+        Supplier existing = supplierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Supplier not found with id " + id));
+
+        existing.setName(supplierDetails.getName());
+        existing.setContact(supplierDetails.getContact());
+        existing.setEmail(supplierDetails.getEmail());
+        existing.setAddress(supplierDetails.getAddress());
+
+        return supplierRepository.save(existing);
+    }
+
+    public void deleteSupplier(Long id) {
+        Supplier existing = supplierRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Supplier not found with id " + id));
+        supplierRepository.delete(existing);
+    }
+
     // Receiving actions
     public Receiving saveReceiving(Receiving receiving) {
         // Business logic for receiving
@@ -54,6 +74,22 @@ public class WarehouseService {
 
     public List<Receiving> getAllReceivings() {
         return receivingRepository.findAll();
+    }
+
+    public List<Receiving> getAllCreditReceiving() {
+        return receivingRepository.findByPaymentType("Credit");
+    }
+
+    // WarehouseService.java
+    public Receiving markReceivingAsPaid(Long id, PaymentDto paymentDto) {
+        Receiving receiving = receivingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Receiving record not found"));
+
+        receiving.setPaymentType(paymentDto.getPaymentType()); // e.g., "Cash"
+        receiving.setCurrency(paymentDto.getCurrency());
+        receiving.setCost(paymentDto.getCost());
+
+        return receivingRepository.save(receiving);
     }
 
     // Inventory actions

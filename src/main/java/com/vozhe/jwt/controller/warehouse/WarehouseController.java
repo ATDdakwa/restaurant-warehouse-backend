@@ -2,6 +2,7 @@
 package com.vozhe.jwt.controller.warehouse;
 
 import com.vozhe.jwt.models.warehouse.*;
+import com.vozhe.jwt.payload.request.PaymentDto;
 import com.vozhe.jwt.service.warehouse.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -33,6 +34,22 @@ public class WarehouseController {
         return ResponseEntity.ok(warehouseService.getAllSuppliers());
     }
 
+    // Update a supplier
+    @PutMapping("/suppliers/{id}")
+    public ResponseEntity<Supplier> updateSupplier(
+            @PathVariable Long id,
+            @RequestBody Supplier supplierDetails) {
+        Supplier updatedSupplier = warehouseService.updateSupplier(id, supplierDetails);
+        return ResponseEntity.ok(updatedSupplier);
+    }
+
+    // Delete a supplier
+    @DeleteMapping("/suppliers/{id}")
+    public ResponseEntity<Void> deleteSupplier(@PathVariable Long id) {
+        warehouseService.deleteSupplier(id);
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
+
     // Receiving endpoints
     @PostMapping("/receiving")
     public ResponseEntity<Receiving> createReceiving(@RequestBody Receiving receiving) {
@@ -43,6 +60,22 @@ public class WarehouseController {
     public ResponseEntity<List<Receiving>> getAllReceivings() {
         return ResponseEntity.ok(warehouseService.getAllReceivings());
     }
+
+    @GetMapping("/receivingByCredits")
+    public ResponseEntity<List<Receiving>> getAllCreditReceiving() {
+        return ResponseEntity.ok(warehouseService.getAllCreditReceiving());
+    }
+
+    // ReceivingController.java
+    @PutMapping("/receiving/{id}/mark-paid")
+    public ResponseEntity<Receiving> markReceivingAsPaid(
+            @PathVariable Long id,
+            @RequestBody PaymentDto paymentDto
+    ) {
+        Receiving updated = warehouseService.markReceivingAsPaid(id, paymentDto);
+        return ResponseEntity.ok(updated);
+    }
+
 
     // Inventory endpoints
     @PostMapping("/inventory")
