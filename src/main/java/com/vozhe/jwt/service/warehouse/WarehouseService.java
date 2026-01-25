@@ -4,6 +4,7 @@ package com.vozhe.jwt.service.warehouse;
 import com.vozhe.jwt.enums.DistributionStatus;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.exceptions.InvalidInputException;
+import com.vozhe.jwt.models.Meat;
 import com.vozhe.jwt.models.settings.GlobalSettings;
 import com.vozhe.jwt.models.settings.PaymentType;
 import com.vozhe.jwt.models.warehouse.*;
@@ -219,7 +220,7 @@ public class WarehouseService {
             inventoryRepository.save(inventory);
 
             double costPerKg =
-                    item.getMeatType() == MeatType.CHICKEN
+                    "CHICKEN".equals(item.getMeatType().getName())
                             ? settings.getCostPerKgChicken()
                             : settings.getCostPerKgBeef();
 
