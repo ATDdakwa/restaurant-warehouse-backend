@@ -1,15 +1,13 @@
 package com.vozhe.jwt.models.warehouse;
 
-import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.enums.StorageLocation;
 import com.vozhe.jwt.models.Base;
+import com.vozhe.jwt.models.Meat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import javax.persistence.*;
 import java.time.LocalDate;
 
 @Data
@@ -18,7 +16,9 @@ import java.time.LocalDate;
 @Entity
 public class Inventory extends Base {
     private String batchNumber;
-    private String meatType;
+    @ManyToOne
+    @JoinColumn(name = "meat_type_id")
+    private Meat meatType;
     private String cut;
     private Double weight;
     private Integer pieces;

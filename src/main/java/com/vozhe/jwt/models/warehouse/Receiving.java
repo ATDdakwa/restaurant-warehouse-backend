@@ -5,13 +5,12 @@ import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.enums.ProcessingStatus;
 import com.vozhe.jwt.enums.QualityStatus;
 import com.vozhe.jwt.models.Base;
+import com.vozhe.jwt.models.Meat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import javax.persistence.*;
 import java.time.LocalDate;
 
 @Data
@@ -21,7 +20,9 @@ import java.time.LocalDate;
 public class Receiving extends Base {
     private String supplierId;
     private String supplierName;
-    private String meatType;
+    @ManyToOne
+    @JoinColumn(name = "meat_type_id")
+    private Meat meatType;
 
     // ADD THESE TWO FIELDS
     private String productType;  // To store the type (e.g., "meats", "1" for Dry Goods, etc.)

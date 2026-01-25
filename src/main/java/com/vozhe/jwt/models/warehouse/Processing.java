@@ -3,6 +3,7 @@ package com.vozhe.jwt.models.warehouse;
 
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.models.Base;
+import com.vozhe.jwt.models.Meat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,9 @@ import java.util.List;
 public class Processing extends Base {
     private Long receivingId;
     private String batchNumber;
-    private String meatType;
+    @ManyToOne
+    @JoinColumn(name = "meat_type_id")
+    private Meat meatType;
     private Integer quantity; // birds/carcasses processed in this step
     private Double weight; // weight processed in this step
     private LocalDate processedDate;
