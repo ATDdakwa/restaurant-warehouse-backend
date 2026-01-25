@@ -25,13 +25,16 @@ public class ReportService {
 
         for (Distribution distribution : distributions) {
             for (DistributionItem item : distribution.getItems()) {
+                // Get meat type name safely
+                String meatTypeName = item.getMeatType() != null ? item.getMeatType().getName() : "Unknown";
+
                 String key = distribution.getIssuedDate().toString() + "-" + distribution.getOutlet() + "-" + item.getCut();
 
                 aggregatedData.computeIfAbsent(key, k -> {
                     DailyConsumptionReportRow row = new DailyConsumptionReportRow();
                     row.setDate(distribution.getIssuedDate().toString());
                     row.setOutlet(distribution.getOutlet());
-                    row.setMeatType(item.getMeatType().toString());
+                    row.setMeatType(meatTypeName);  // Use the name, not toString()
                     row.setCut(item.getCut());
                     row.setTotalWeight(0.0);
                     row.setTotalPieces(0);

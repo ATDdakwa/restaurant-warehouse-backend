@@ -9,6 +9,7 @@ import com.vozhe.jwt.models.settings.GlobalSettings;
 import com.vozhe.jwt.models.settings.PaymentType;
 import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.payload.request.PaymentDto;
+import com.vozhe.jwt.repository.MeatRepository;
 import com.vozhe.jwt.repository.warehouse.*;
 import com.vozhe.jwt.service.settings.GlobalSettingsService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class WarehouseService {
     private final DistributionRepository distributionRepository;
     private final ProcessingRepository processingRepository;
     private final GlobalSettingsService globalSettingsService;
+    private final MeatRepository meatRepository;
 
 
     // Supplier actions
@@ -61,6 +63,14 @@ public class WarehouseService {
 
     // Receiving actions
     public Receiving saveReceiving(Receiving receiving) {
+
+        // Convert string to Meat entity
+        if (receiving.getMeatTypeName() != null) {
+            Meat meat = meatRepository.findByName(receiving.getMeatTypeName())
+                    .orElseThrow(() -> new RuntimeException("Meat type not found: " + receiving.getMeatTypeName()));
+            receiving.setMeatType(meat);
+        }
+
         // Business logic for receiving
         if (receiving.getSupplierId() == null) {
             throw new InvalidInputException("Supplier ID is required");
@@ -76,11 +86,11 @@ public class WarehouseService {
     }
 
     public List<Receiving> getAllReceivings() {
-        return receivingRepository.findAll();
+        return receivingRepository.findAllWithMeatType();
     }
 
     public List<Receiving> getAllCreditReceiving() {
-        return receivingRepository.findByPaymentType("Credit");
+        return receivingRepository.findByPaymentType("CREDIT");
     }
 
     // WarehouseService.java
@@ -220,11 +230,7 @@ public class WarehouseService {
             inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
             inventoryRepository.save(inventory);
 
-            double costPerKg = Optional.ofNullable(item.getMeatType())
-                    .map(meat -> "CHICKEN".equals(meat.getName())
-                            ? settings.getCostPerKgChicken()
-                            : settings.getCostPerKgBeef())
-                    .orElse(0.0);
+            double costPerKg = globalSettingsService.getCostPerKg(item.getMeatType().getId());
 
             item.setIssuedWeight(item.getApprovedWeight());
             item.setCost(item.getIssuedWeight() * costPerKg);

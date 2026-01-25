@@ -28,4 +28,11 @@ public class Inventory extends Base {
     private LocalDate receivedDate;
     private Double costPerKg;
     private String status;
+
+    @PrePersist
+    protected void onCreate() {
+        if (receivedDate == null) {
+            receivedDate = LocalDate.now();
+        }
+    }
 }

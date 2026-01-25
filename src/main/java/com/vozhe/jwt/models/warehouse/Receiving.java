@@ -1,6 +1,9 @@
 
 package com.vozhe.jwt.models.warehouse;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.enums.ProcessingStatus;
 import com.vozhe.jwt.enums.QualityStatus;
@@ -21,8 +24,13 @@ public class Receiving extends Base {
     private String supplierId;
     private String supplierName;
     @ManyToOne
-    @JoinColumn(name = "meat_type_id")
+    @JoinColumn(name = "meat_type_id")  // Use meat_type_id
     private Meat meatType;
+
+    // Transient field to accept string input from frontend
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String meatTypeName;
 
     // ADD THESE TWO FIELDS
     private String productType;  // To store the type (e.g., "meats", "1" for Dry Goods, etc.)
@@ -50,4 +58,11 @@ public class Receiving extends Base {
     private String paymentType;
     // retrieved from DB
     private String currency;
+
+    // Custom setter to handle both String and Object for meatType
+    // Handle string input for meatType
+    @JsonSetter("meatType")
+    public void setMeatTypeAsString(String meatName) {
+        this.meatTypeName = meatName;
+    }
 }

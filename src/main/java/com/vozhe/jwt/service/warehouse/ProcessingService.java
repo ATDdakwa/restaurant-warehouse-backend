@@ -3,13 +3,16 @@ package com.vozhe.jwt.service.warehouse;
 
 import com.vozhe.jwt.enums.ProcessingStatus;
 import com.vozhe.jwt.exceptions.InvalidInputException;
+import com.vozhe.jwt.models.Meat;
 import com.vozhe.jwt.models.warehouse.Inventory;
 import com.vozhe.jwt.models.warehouse.Processing;
 import com.vozhe.jwt.models.warehouse.ProcessingOutput;
 import com.vozhe.jwt.models.warehouse.Receiving;
+import com.vozhe.jwt.repository.MeatRepository;
 import com.vozhe.jwt.repository.warehouse.InventoryRepository;
 import com.vozhe.jwt.repository.warehouse.ProcessingRepository;
 import com.vozhe.jwt.repository.warehouse.ReceivingRepository;
+import com.vozhe.jwt.service.settings.GlobalSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +27,20 @@ public class ProcessingService {
     private final ProcessingRepository processingRepository;
     private final ReceivingRepository receivingRepository;
     private final InventoryRepository inventoryRepository;
+    private final MeatRepository meatRepository;
+    private final GlobalSettingsService globalSettingsService; // Add this
+
+
 
     @Transactional
     public Processing saveProcessing(Processing processing) {
+        // Convert string to Meat entity
+        if (processing.getMeatTypeName() != null && !processing.getMeatTypeName().isEmpty()) {
+            Meat meat = meatRepository.findByName(processing.getMeatTypeName())
+                    .orElseThrow(() -> new RuntimeException("Meat type not found: " + processing.getMeatTypeName()));
+            processing.setMeatType(meat);
+        }
+
         // 1. Find the receiving record
         Receiving receiving = receivingRepository.findById(processing.getReceivingId())
                 .orElseThrow(() -> new InvalidInputException("Receiving record not found with id: " + processing.getReceivingId()));
@@ -112,6 +126,9 @@ public class ProcessingService {
                                 inventoryRepository.save(inventory);
                             },
                             () -> {
+                                // Get cost per kg from global settings
+                                Double costPerKg = globalSettingsService.getCostPerKg(processing.getMeatType().getId());
+
                                 Inventory newInventory = new Inventory();
                                 newInventory.setBatchNumber(processing.getBatchNumber());
                                 newInventory.setMeatType(processing.getMeatType());
@@ -120,8 +137,8 @@ public class ProcessingService {
                                 newInventory.setPieces(output.getPieces());
                                 newInventory.setStorageLocation(null); // Or determine based on cut
                                 newInventory.setExpiryDate(LocalDate.now().plusDays(5)); // Example expiry
-                                newInventory.setReceivedDate(null);
-                                newInventory.setCostPerKg(0.0); // Example cost
+//                                newInventory.setReceivedDate(LocalDate.now());
+                                newInventory.setCostPerKg(costPerKg); // Get from settings
                                 newInventory.setStatus("available");
                                 inventoryRepository.save(newInventory);
                             }
