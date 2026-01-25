@@ -21,6 +21,7 @@
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/BaseEntity.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/service/Impl/products/ProductService.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/repository/warehouse/DistributionRepository.java
+/Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/payload/request/PaymentDto.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/enums/StorageLocation.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/UserRole.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/service/MeatService.java

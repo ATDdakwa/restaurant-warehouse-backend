@@ -56,6 +56,7 @@ com/vozhe/jwt/models/products/Product.class
 com/vozhe/jwt/enums/BeefCut.class
 com/vozhe/jwt/enums/Gender.class
 com/vozhe/jwt/config/CORSConfig.class
+com/vozhe/jwt/payload/request/PaymentDto.class
 com/vozhe/jwt/controller/settings/PaymentSettingsController.class
 com/vozhe/jwt/repository/OutputCutRepository.class
 com/vozhe/jwt/exceptions/UserExceptionHandlerControllerAdvice.class
