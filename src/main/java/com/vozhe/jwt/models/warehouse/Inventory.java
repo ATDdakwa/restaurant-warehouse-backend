@@ -18,8 +18,7 @@ import java.time.LocalDate;
 @Entity
 public class Inventory extends Base {
     private String batchNumber;
-    @Enumerated(EnumType.STRING)
-    private MeatType meatType;
+    private String meatType;
     private String cut;
     private Double weight;
     private Integer pieces;

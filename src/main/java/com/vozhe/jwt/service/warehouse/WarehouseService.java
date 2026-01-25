@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -280,17 +281,17 @@ public class WarehouseService {
 
         double currentStock = availableInventory.stream().mapToDouble(Inventory::getWeight).sum();
         double totalStockChicken = availableInventory.stream()
-                .filter(i -> i.getMeatType() == MeatType.CHICKEN)
+                .filter(i -> Objects.equals(i.getMeatType(), "CHICKEN"))
                 .mapToDouble(Inventory::getWeight).sum();
         double totalStockBeef = availableInventory.stream()
-                .filter(i -> i.getMeatType() == MeatType.BEEF)
+                .filter(i -> Objects.equals(i.getMeatType(), "BEEF"))
                 .mapToDouble(Inventory::getWeight).sum();
 
         double totalPiecesChicken = availableInventory.stream()
-                .filter(i -> i.getMeatType() == MeatType.CHICKEN && i.getPieces() != null)
+                .filter(i -> Objects.equals(i.getMeatType(), "CHICKEN") && i.getPieces() != null)
                 .mapToInt(Inventory::getPieces).sum();
         double totalPiecesBeef = availableInventory.stream()
-                .filter(i -> i.getMeatType() == MeatType.BEEF && i.getPieces() != null)
+                .filter(i -> Objects.equals(i.getMeatType(), "BEEF") && i.getPieces() != null)
                 .mapToInt(Inventory::getPieces).sum();
 
         double averageYield = processingRepository.findAll().stream().mapToDouble(Processing::getYieldPercentage).average().orElse(0);

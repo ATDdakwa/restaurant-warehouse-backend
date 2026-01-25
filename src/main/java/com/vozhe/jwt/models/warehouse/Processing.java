@@ -18,8 +18,7 @@ import java.util.List;
 public class Processing extends Base {
     private Long receivingId;
     private String batchNumber;
-    @Enumerated(EnumType.STRING)
-    private MeatType meatType;
+    private String meatType;
     private Integer quantity; // birds/carcasses processed in this step
     private Double weight; // weight processed in this step
     private LocalDate processedDate;
