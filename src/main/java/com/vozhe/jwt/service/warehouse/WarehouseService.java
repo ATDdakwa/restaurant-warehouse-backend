@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -219,10 +220,11 @@ public class WarehouseService {
             inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
             inventoryRepository.save(inventory);
 
-            double costPerKg =
-                    "CHICKEN".equals(item.getMeatType().getName())
+            double costPerKg = Optional.ofNullable(item.getMeatType())
+                    .map(meat -> "CHICKEN".equals(meat.getName())
                             ? settings.getCostPerKgChicken()
-                            : settings.getCostPerKgBeef();
+                            : settings.getCostPerKgBeef())
+                    .orElse(0.0);
 
             item.setIssuedWeight(item.getApprovedWeight());
             item.setCost(item.getIssuedWeight() * costPerKg);
