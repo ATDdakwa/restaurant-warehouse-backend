@@ -3,6 +3,7 @@ package com.vozhe.jwt.service.warehouse;
 
 import com.vozhe.jwt.enums.DistributionStatus;
 import com.vozhe.jwt.enums.MeatType;
+import com.vozhe.jwt.enums.ProcessingStatus;
 import com.vozhe.jwt.exceptions.InvalidInputException;
 import com.vozhe.jwt.models.Meat;
 import com.vozhe.jwt.models.settings.GlobalSettings;
@@ -83,6 +84,71 @@ public class WarehouseService {
         }
         receiving.setAverageWeight(receiving.getTotalWeight() / receiving.getQuantity());
         return receivingRepository.save(receiving);
+    }
+
+    public Receiving updateReceiving(Long id, Receiving receiving) {
+        // Find existing record
+        Receiving existing = receivingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Receiving record not found with id " + id));
+
+        // Validate that only PENDING records can be edited
+        if (existing.getStatus() != ProcessingStatus.PENDING) {
+            throw new InvalidInputException("Only PENDING records can be edited");
+        }
+
+        // Business logic validations
+        if (receiving.getSupplierId() == null) {
+            throw new InvalidInputException("Supplier ID is required");
+        }
+
+        supplierRepository.findById(Long.parseLong(receiving.getSupplierId()))
+                .orElseThrow(() -> new InvalidInputException("Supplier not found"));
+
+        if (receiving.getQuantity() <= 0 || receiving.getTotalWeight() <= 0) {
+            throw new InvalidInputException("Quantity and total weight must be positive");
+        }
+
+        // Convert meatTypeName string to Meat entity if provided
+        if (receiving.getMeatTypeName() != null && !receiving.getMeatTypeName().isEmpty()) {
+            Meat meat = meatRepository.findByName(receiving.getMeatTypeName())
+                    .orElseThrow(() -> new RuntimeException("Meat type not found: " + receiving.getMeatTypeName()));
+            existing.setMeatType(meat);
+        } else {
+            existing.setMeatType(null); // Clear meat type if not provided
+        }
+
+        // Update basic fields
+        existing.setSupplierId(receiving.getSupplierId());
+        existing.setSupplierName(receiving.getSupplierName());
+
+        // Update product fields
+        existing.setProductType(receiving.getProductType());
+        existing.setProductId(receiving.getProductId());
+        existing.setProductName(receiving.getProductName());
+
+        // Update quantity, weight, and cost
+        existing.setQuantity(receiving.getQuantity());
+        existing.setTotalWeight(receiving.getTotalWeight());
+        existing.setCost(receiving.getCost());
+
+        // Recalculate average weight
+        existing.setAverageWeight(receiving.getTotalWeight() / receiving.getQuantity());
+
+        // Update payment information
+        existing.setPaymentType(receiving.getPaymentType());
+        existing.setCurrency(receiving.getCurrency());
+
+        // Update quality information
+        existing.setQualityStatus(receiving.getQualityStatus());
+        existing.setQualityNotes(receiving.getQualityNotes());
+
+        // Note: deliveryDate, batchNumber, and receivedBy typically shouldn't change
+        // but will include them if the client want them editable:
+        // existing.setDeliveryDate(receiving.getDeliveryDate());
+        // existing.setBatchNumber(receiving.getBatchNumber());
+        // existing.setReceivedBy(receiving.getReceivedBy());
+
+        return receivingRepository.save(existing);
     }
 
     public List<Receiving> getAllReceivings() {

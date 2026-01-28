@@ -55,6 +55,11 @@ public class WarehouseController {
     public ResponseEntity<Receiving> createReceiving(@RequestBody Receiving receiving) {
         return ResponseEntity.ok(warehouseService.saveReceiving(receiving));
     }
+    @PutMapping("/receiving/{id}")
+    public ResponseEntity<Receiving> updateReceiving(@PathVariable Long id, @RequestBody Receiving receivingDetails) {
+        Receiving updateReceivedItem = warehouseService.updateReceiving(id, receivingDetails);
+        return ResponseEntity.ok(updateReceivedItem);
+    }
 
     @GetMapping("/receiving")
     public ResponseEntity<List<Receiving>> getAllReceivings() {
