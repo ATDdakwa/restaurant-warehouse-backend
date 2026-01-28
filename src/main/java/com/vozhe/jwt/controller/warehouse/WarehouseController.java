@@ -126,6 +126,11 @@ public class WarehouseController {
         return ResponseEntity.ok(warehouseService.confirmDelivery(id));
     }
 
+    @PutMapping("/distribution/{id}/acknowledge")
+    public ResponseEntity<Distribution> acknowledgeReceiptOfDelivery(@PathVariable Long id) {
+        return ResponseEntity.ok(warehouseService.acknowledgeDelivery(id));
+    }
+
     /* ================= SHOP ================= */
     @PutMapping("/distribution/{id}/receive")
     public ResponseEntity<Distribution> confirmReceipt(@PathVariable Long id) {

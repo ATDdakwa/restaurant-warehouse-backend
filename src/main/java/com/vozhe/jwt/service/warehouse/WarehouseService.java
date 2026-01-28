@@ -165,11 +165,9 @@ public class WarehouseService {
                 throw new InvalidInputException("Not enough pieces for item " + inventory.getId());
             }
 
-            inventory.setPieces(inventory.getPieces() - item.getRequestedPieces());
-            inventoryRepository.save(inventory);
-
             item.setApprovedWeight(0.0); // Will be set during approval
             item.setIssuedWeight(0.0); // Will be set during approval
+            item.setApprovedPieces(0);
             totalApprovedWeight += item.getApprovedWeight();
         }
 
@@ -191,12 +189,17 @@ public class WarehouseService {
         }
 
         for (DistributionItem approved : approvedItems) {
+            Inventory inventory = inventoryRepository.findById(approved.getInventoryId())
+                    .orElseThrow(() -> new InvalidInputException("Inventory item not found"));
             DistributionItem existing = distribution.getItems().stream()
                     .filter(i -> i.getId().equals(approved.getId()))
                     .findFirst()
                     .orElseThrow(() -> new InvalidInputException("Item not found"));
 
+            inventory.setPieces(inventory.getPieces() - approved.getRequestedPieces());
+            inventoryRepository.save(inventory);
             existing.setApprovedWeight(approved.getApprovedWeight());
+            existing.setApprovedPieces(approved.getApprovedPieces());
         }
 
         distribution.setStatus(DistributionStatus.APPROVED);
@@ -245,13 +248,27 @@ public class WarehouseService {
         return distributionRepository.save(distribution);
     }
 
-    public Distribution confirmDelivery(Long id) {
+    public Distribution acknowledgeDelivery(Long id) {
 
         Distribution distribution = distributionRepository.findById(id)
                 .orElseThrow(() -> new InvalidInputException("Distribution not found"));
 
         if (distribution.getStatus() != DistributionStatus.ISSUED) {
             throw new InvalidInputException("Only ISSUED distributions can be delivered");
+        }
+
+        distribution.setStatus(DistributionStatus.ACKNOWLEDGED);
+        distribution.setDeliveredAt(LocalDateTime.now());
+
+        return distributionRepository.save(distribution);
+    }
+    public Distribution confirmDelivery(Long id) {
+
+        Distribution distribution = distributionRepository.findById(id)
+                .orElseThrow(() -> new InvalidInputException("Distribution not found"));
+
+        if (distribution.getStatus() != DistributionStatus.ACKNOWLEDGED) {
+            throw new InvalidInputException("Only ACKNOWLEDGED distributions can be delivered");
         }
 
         distribution.setStatus(DistributionStatus.DELIVERED);

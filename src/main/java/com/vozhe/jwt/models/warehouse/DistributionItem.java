@@ -23,6 +23,8 @@ public class DistributionItem extends Base {
 
     private Integer requestedPieces;   // SHOP
 
+    private Integer approvedPieces;   // STOCK_CONTROLLER
+
     private Double approvedWeight;      // STOCK_CONTROLLER
 
     private Double issuedWeight;        // STOCK_CONTROLLER
