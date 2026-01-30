@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -116,33 +117,47 @@ public class ProcessingService {
 
     private void updateInventory(Processing processing) {
         for (ProcessingOutput output : processing.getOutputs()) {
-            inventoryRepository.findByBatchNumberAndCut(processing.getBatchNumber(), output.getCut())
-                    .ifPresentOrElse(
-                            inventory -> {
-                                inventory.setWeight(inventory.getWeight() + output.getWeight());
-                                if (output.getPieces() != null) {
-                                    inventory.setPieces(inventory.getPieces() + output.getPieces());
-                                }
-                                inventoryRepository.save(inventory);
-                            },
-                            () -> {
-                                // Get cost per kg from global settings
-                                Double costPerKg = globalSettingsService.getCostPerKg(processing.getMeatType().getId());
+            // Find by meatType and cut ONLY (no batch number)
+            Inventory inventory = inventoryRepository
+                    .findByMeatTypeAndCut(processing.getMeatType(), output.getCut())
+                    .orElseGet(() -> {
+                        Double costPerKg = globalSettingsService.getCostPerKg(
+                                processing.getMeatType().getId()
+                        );
 
-                                Inventory newInventory = new Inventory();
-                                newInventory.setBatchNumber(processing.getBatchNumber());
-                                newInventory.setMeatType(processing.getMeatType());
-                                newInventory.setCut(output.getCut());
-                                newInventory.setWeight(output.getWeight());
-                                newInventory.setPieces(output.getPieces());
-                                newInventory.setStorageLocation(null); // Or determine based on cut
-                                newInventory.setExpiryDate(LocalDate.now().plusDays(5)); // Example expiry
-//                                newInventory.setReceivedDate(LocalDate.now());
-                                newInventory.setCostPerKg(costPerKg); // Get from settings
-                                newInventory.setStatus("available");
-                                inventoryRepository.save(newInventory);
-                            }
-                    );
+                        Inventory newInventory = new Inventory();
+                        newInventory.setBatchNumber(null); // Don't track batch in inventory
+                        newInventory.setMeatType(processing.getMeatType());
+                        newInventory.setCut(output.getCut());
+                        newInventory.setWeight(0.0);
+                        newInventory.setPieces(0);
+                        newInventory.setStorageLocation(null);
+                        newInventory.setExpiryDate(LocalDate.now().plusDays(5));
+                        newInventory.setCostPerKg(costPerKg);
+                        newInventory.setStatus("available");
+                        newInventory.setSourceBatches(processing.getBatchNumber()); // Initialize with first batch
+                        newInventory.setLastUpdated(LocalDateTime.now());
+                        return newInventory;
+                    });
+
+            // Track which batches contributed (for recall/traceability purposes)
+            if (inventory.getSourceBatches() == null || inventory.getSourceBatches().isEmpty()) {
+                inventory.setSourceBatches(processing.getBatchNumber());
+            } else if (!inventory.getSourceBatches().contains(processing.getBatchNumber())) {
+                // Only add if this batch hasn't contributed before
+                inventory.setSourceBatches(inventory.getSourceBatches() + "," + processing.getBatchNumber()
+                );
+            }
+
+            // Add to existing inventory
+            inventory.setWeight(inventory.getWeight() + output.getWeight());
+            inventory.setPieces((inventory.getPieces() != null ? inventory.getPieces() : 0) + (output.getPieces() != null ? output.getPieces() : 0)
+            );
+
+            // Update the timestamp
+            inventory.setLastUpdated(LocalDateTime.now());
+
+            inventoryRepository.save(inventory);
         }
     }
 }

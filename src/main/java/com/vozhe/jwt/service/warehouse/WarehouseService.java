@@ -17,10 +17,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -190,16 +193,9 @@ public class WarehouseService {
 
         double totalApprovedWeight = 0;
         for (DistributionItem item : distribution.getItems()) {
-            Inventory inventory = inventoryRepository.findById(item.getInventoryId())
+            inventoryRepository.findById(item.getInventoryId())
                     .orElseThrow(() -> new InvalidInputException("Inventory item not found"));
 
-            if (inventory.getPieces() == null || inventory.getPieces() < item.getRequestedPieces()) {
-                throw new InvalidInputException("Not enough pieces for item " + inventory.getId());
-            }
-
-            inventory.setPieces(inventory.getPieces() - item.getRequestedPieces());
-            inventoryRepository.save(inventory);
-            
             item.setApprovedWeight(0.0); // Will be set during approval
             item.setIssuedWeight(0.0); // Will be set during approval
             totalApprovedWeight += item.getApprovedWeight();
@@ -215,6 +211,7 @@ public class WarehouseService {
         distributions.forEach(distribution -> distribution.getItems().size()); // Initialize items
         return distributions;
     }
+
     public Distribution requestDistribution(Distribution distribution) {
 
         // Business logic for distribution
@@ -255,15 +252,13 @@ public class WarehouseService {
         }
 
         for (DistributionItem approved : approvedItems) {
-            Inventory inventory = inventoryRepository.findById(approved.getInventoryId())
+            inventoryRepository.findById(approved.getInventoryId())
                     .orElseThrow(() -> new InvalidInputException("Inventory item not found"));
             DistributionItem existing = distribution.getItems().stream()
                     .filter(i -> i.getId().equals(approved.getId()))
                     .findFirst()
                     .orElseThrow(() -> new InvalidInputException("Item not found"));
 
-            inventory.setPieces(inventory.getPieces() - approved.getRequestedPieces());
-            inventoryRepository.save(inventory);
             existing.setApprovedWeight(approved.getApprovedWeight());
             existing.setApprovedPieces(approved.getApprovedPieces());
         }
@@ -289,14 +284,19 @@ public class WarehouseService {
 
         for (DistributionItem item : distribution.getItems()) {
 
-            Inventory inventory = inventoryRepository.findById(item.getInventoryId())
+            Inventory inventory = inventoryRepository.findByIdForUpdate(item.getInventoryId())
                     .orElseThrow(() -> new InvalidInputException("Inventory not found"));
 
             if (inventory.getWeight() < item.getApprovedWeight()) {
                 throw new InvalidInputException("Insufficient stock for " + item.getCut());
             }
 
+            if (inventory.getPieces() < item.getApprovedPieces()) {
+                throw new InvalidInputException("Insufficient pieces for " + item.getCut());
+            }
+
             inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
+            inventory.setPieces(inventory.getPieces() - item.getApprovedPieces());
             inventoryRepository.save(inventory);
 
             double costPerKg = globalSettingsService.getCostPerKg(item.getMeatType().getId());
@@ -328,6 +328,7 @@ public class WarehouseService {
 
         return distributionRepository.save(distribution);
     }
+
     public Distribution confirmDelivery(Long id) {
 
         Distribution distribution = distributionRepository.findById(id)
@@ -357,8 +358,6 @@ public class WarehouseService {
 
         return distributionRepository.save(distribution);
     }
-
-
 
     public com.vozhe.jwt.payload.response.DashboardMetrics getDashboardMetrics() {
         double totalReceived = receivingRepository.findAll().stream().mapToDouble(Receiving::getTotalWeight).sum();
@@ -418,5 +417,79 @@ public class WarehouseService {
                 distributionRecords,
                 inventory
         );
+    }
+
+    @Transactional
+    public void consolidateInventory() {
+        List<Inventory> allInventory = inventoryRepository.findAll();
+        int totalConsolidated = 0;
+        int totalMigrated = 0;
+
+        Map<String, List<Inventory>> grouped = allInventory.stream()
+                .collect(Collectors.groupingBy(inv ->
+                        inv.getMeatType().getId() + "_" + inv.getCut()
+                ));
+
+        for (Map.Entry<String, List<Inventory>> entry : grouped.entrySet()) {
+            List<Inventory> items = entry.getValue();
+
+            if (items.size() > 1) {
+                Inventory consolidated = items.get(0);
+                consolidated.setBatchNumber(null);
+
+                double totalWeight = items.stream()
+                        .mapToDouble(Inventory::getWeight)
+                        .sum();
+                int totalPieces = items.stream()
+                        .mapToInt(inv -> inv.getPieces() != null ? inv.getPieces() : 0)
+                        .sum();
+
+                consolidated.setWeight(totalWeight);
+                consolidated.setPieces(totalPieces);
+
+                LocalDate earliestExpiry = items.stream()
+                        .map(Inventory::getExpiryDate)
+                        .filter(Objects::nonNull)
+                        .min(LocalDate::compareTo)
+                        .orElse(LocalDate.now().plusDays(5));
+                consolidated.setExpiryDate(earliestExpiry);
+
+                String consolidatedSourceBatches = items.stream()
+                        .map(Inventory::getBatchNumber)
+                        .filter(batch -> batch != null && !batch.isEmpty())
+                        .distinct()
+                        .collect(Collectors.joining(","));
+
+                consolidated.setSourceBatches(
+                        consolidatedSourceBatches.isEmpty() ? null : consolidatedSourceBatches
+                );
+                consolidated.setLastUpdated(LocalDateTime.now());
+
+                inventoryRepository.save(consolidated);
+
+                // Delete the rest
+                for (int i = 1; i < items.size(); i++) {
+                    inventoryRepository.delete(items.get(i));
+                }
+
+                totalConsolidated += items.size();
+                System.out.println("Consolidated " + items.size() + " entries for " +
+                        consolidated.getMeatType().getName() + " - " + consolidated.getCut());
+
+            } else if (items.size() == 1) {
+                Inventory single = items.get(0);
+
+                if (single.getBatchNumber() != null && !single.getBatchNumber().isEmpty()) {
+                    single.setSourceBatches(single.getBatchNumber());
+                    single.setBatchNumber(null);
+                    single.setLastUpdated(LocalDateTime.now());
+                    inventoryRepository.save(single);
+                    totalMigrated++;
+                }
+            }
+        }
+
+        System.out.println("Migration complete: " + totalConsolidated +
+                " entries consolidated, " + totalMigrated + " entries migrated");
     }
 }

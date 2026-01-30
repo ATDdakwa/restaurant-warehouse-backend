@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -28,7 +29,10 @@ public class Inventory extends Base {
     private LocalDate receivedDate;
     private Double costPerKg;
     private String status;
-
+    @Column(name = "source_batches")
+    private String sourceBatches; // "BATCH001,BATCH002,BATCH003"
+    @Column(name = "last_updated")
+    private LocalDateTime lastUpdated;
     @PrePersist
     protected void onCreate() {
         if (receivedDate == null) {

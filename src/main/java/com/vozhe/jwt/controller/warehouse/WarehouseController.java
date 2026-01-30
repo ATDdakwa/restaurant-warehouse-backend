@@ -3,13 +3,17 @@ package com.vozhe.jwt.controller.warehouse;
 
 import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.payload.request.PaymentDto;
+import com.vozhe.jwt.repository.warehouse.InventoryRepository;
 import com.vozhe.jwt.service.warehouse.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/warehouse")
@@ -17,6 +21,7 @@ import java.util.List;
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
+    private final InventoryRepository inventoryRepository;
 
     // Supplier endpoints
     @PostMapping("/suppliers")
@@ -91,6 +96,37 @@ public class WarehouseController {
     @GetMapping("/inventory")
     public ResponseEntity<List<Inventory>> getAllInventories() {
         return ResponseEntity.ok(warehouseService.getAllInventories());
+    }
+
+    // Add this temporary endpoint to see current state
+    @GetMapping("/inventory/analysis")
+    public ResponseEntity<?> analyzeInventory() {
+        List<Inventory> all = inventoryRepository.findAll();
+
+        Map<String, Object> analysis = new HashMap<>();
+        analysis.put("totalEntries", all.size());
+        analysis.put("uniqueBatches", all.stream()
+                .map(Inventory::getBatchNumber)
+                .distinct()
+                .count());
+        analysis.put("groupedByCut", all.stream()
+                .collect(Collectors.groupingBy(
+                        inv -> inv.getMeatType().getName() + " - " + inv.getCut(),
+                        Collectors.summingDouble(Inventory::getWeight)
+                )));
+
+        return ResponseEntity.ok(analysis);
+    }
+
+    @PostMapping("/inventory/migrate")
+    public ResponseEntity<?> migrateInventory() {
+        try {
+            warehouseService.consolidateInventory();
+            return ResponseEntity.ok("Migration completed successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body("Migration failed: " + e.getMessage());
+        }
     }
 
     // Distribution endpoints
