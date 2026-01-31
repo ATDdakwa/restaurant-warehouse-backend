@@ -16,6 +16,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"requisitionNumber"})
+})
 public class Distribution extends Base {
 
     private String requisitionNumber;

@@ -20,6 +20,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"batchNumber"})
+})
 public class Receiving extends Base {
     private String supplierId;
     private String supplierName;

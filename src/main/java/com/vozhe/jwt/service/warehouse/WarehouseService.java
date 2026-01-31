@@ -298,10 +298,10 @@ public class WarehouseService {
                 throw new InvalidInputException("Insufficient stock for " + item.getCut());
             }
 
-            int availablePieces = inventory.getPieces() != null ? inventory.getPieces() : 0;
-            if (availablePieces < item.getApprovedPieces()) {
-                throw new InvalidInputException("Insufficient pieces for " + item.getCut());
-            }
+//            int availablePieces = inventory.getPieces() != null ? inventory.getPieces() : 0;
+//            if (availablePieces < item.getApprovedPieces()) {
+//                throw new InvalidInputException("Insufficient pieces for " + item.getCut());
+//            }
 
             // Deduct from inventory
             inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
