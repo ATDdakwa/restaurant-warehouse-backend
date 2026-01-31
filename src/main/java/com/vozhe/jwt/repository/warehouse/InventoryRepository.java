@@ -13,6 +13,8 @@ import java.util.Optional;
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     Optional<Inventory> findByBatchNumberAndCut(String batchNumber, String cut);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Inventory> findByMeatTypeAndCut(Meat meatType, String cut);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

@@ -1,6 +1,7 @@
 
 package com.vozhe.jwt.controller.warehouse;
 
+import com.vozhe.jwt.enums.DistributionStatus;
 import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.payload.request.PaymentDto;
 import com.vozhe.jwt.repository.warehouse.InventoryRepository;
@@ -176,6 +177,24 @@ public class WarehouseController {
     @PutMapping("/distribution/{id}/receive")
     public ResponseEntity<Distribution> confirmReceipt(@PathVariable Long id) {
         return ResponseEntity.ok(warehouseService.confirmReceipt(id));
+    }
+
+    @DeleteMapping("/distribution/duplicates/delete")
+    public ResponseEntity<Void> deleteDuplicateDistributions() {
+        warehouseService.cleanUpDistributions();
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/distribution/requested")
+    public ResponseEntity<Void> deleteAllRequested() {
+        warehouseService.deleteAllRequestedDistributions();
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/distribution/deleteAllRequested")
+    public ResponseEntity<Void> deleteRequested() {
+        warehouseService.deleteByStatus( DistributionStatus.REQUESTED);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/reports")

@@ -279,28 +279,39 @@ public class WarehouseService {
             throw new InvalidInputException("Only APPROVED distributions can be issued");
         }
 
-        GlobalSettings settings = globalSettingsService.getGlobalSettings();
         double totalIssuedWeight = 0;
 
         for (DistributionItem item : distribution.getItems()) {
 
-            Inventory inventory = inventoryRepository.findByIdForUpdate(item.getInventoryId())
-                    .orElseThrow(() -> new InvalidInputException("Inventory not found"));
+            // Find inventory by meatType and cut instead of inventoryId
+            Inventory inventory = inventoryRepository.findByMeatTypeAndCut(
+                    item.getMeatType(),
+                    item.getCut()
+            ).orElseThrow(() -> new InvalidInputException(
+                    "Inventory not found for " + item.getMeatType().getName() + " - " + item.getCut()
+            ));
 
+            // Validate stock availability
             if (inventory.getWeight() < item.getApprovedWeight()) {
                 throw new InvalidInputException("Insufficient stock for " + item.getCut());
             }
 
-            if (inventory.getPieces() < item.getApprovedPieces()) {
+            int availablePieces = inventory.getPieces() != null ? inventory.getPieces() : 0;
+            if (availablePieces < item.getApprovedPieces()) {
                 throw new InvalidInputException("Insufficient pieces for " + item.getCut());
             }
 
+            // Deduct from inventory
             inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
-            inventory.setPieces(inventory.getPieces() - item.getApprovedPieces());
+            inventory.setPieces(availablePieces - item.getApprovedPieces());
+            inventory.setLastUpdated(LocalDateTime.now());
             inventoryRepository.save(inventory);
 
-            double costPerKg = globalSettingsService.getCostPerKg(item.getMeatType().getId());
+            // Update the inventoryId to the new consolidated inventory ID
+            item.setInventoryId(inventory.getId());
 
+            // Calculate cost
+            double costPerKg = globalSettingsService.getCostPerKg(item.getMeatType().getId());
             item.setIssuedWeight(item.getApprovedWeight());
             item.setCost(item.getIssuedWeight() * costPerKg);
 
@@ -491,5 +502,52 @@ public class WarehouseService {
 
         System.out.println("Migration complete: " + totalConsolidated +
                 " entries consolidated, " + totalMigrated + " entries migrated");
+    }
+
+    @Transactional
+    public void cleanUpDistributions() {
+        List<Distribution> distributions =
+                distributionRepository.findByStatusIn(
+                        List.of(DistributionStatus.REQUESTED, DistributionStatus.ISSUED)
+                );
+
+        Map<String, List<Distribution>> grouped =
+                distributions.stream()
+                        .collect(Collectors.groupingBy(
+                                d -> d.getRequisitionNumber() + "-" + d.getOutlet()
+                        ));
+
+        for (List<Distribution> group : grouped.values()) {
+
+            boolean hasIssued = group.stream()
+                    .anyMatch(d -> d.getStatus() == DistributionStatus.ISSUED);
+
+            if (hasIssued) {
+                // delete all REQUESTED if ISSUED exists
+                group.stream()
+                        .filter(d -> d.getStatus() == DistributionStatus.REQUESTED)
+                        .forEach(distributionRepository::delete);
+            } else {
+                // optional: remove duplicate REQUESTED, keep one
+                List<Distribution> requested = group.stream()
+                        .filter(d -> d.getStatus() == DistributionStatus.REQUESTED)
+                        .toList();
+
+                for (int i = 1; i < requested.size(); i++) {
+                    distributionRepository.delete(requested.get(i));
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public void deleteAllRequestedDistributions() {
+        distributionRepository.deleteByStatus(DistributionStatus.REQUESTED);
+    }
+
+    @Transactional
+    public void deleteByStatus(DistributionStatus status) {
+        List<Distribution> distributions = distributionRepository.findByStatus(status);
+        distributionRepository.deleteAll(distributions);
     }
 }
