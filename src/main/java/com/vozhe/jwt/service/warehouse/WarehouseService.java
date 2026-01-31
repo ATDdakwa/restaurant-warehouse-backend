@@ -252,13 +252,15 @@ public class WarehouseService {
         }
 
         for (DistributionItem approved : approvedItems) {
-            inventoryRepository.findById(approved.getInventoryId())
-                    .orElseThrow(() -> new InvalidInputException("Inventory item not found"));
+            Inventory inventory = inventoryRepository.findById(approved.getInventoryId())
+                    .orElseThrow(() -> new InvalidInputException("Inventory item not found")); //removed
             DistributionItem existing = distribution.getItems().stream()
                     .filter(i -> i.getId().equals(approved.getId()))
                     .findFirst()
                     .orElseThrow(() -> new InvalidInputException("Item not found"));
 
+            inventory.setPieces(inventory.getPieces() - approved.getRequestedPieces()); ////removed
+            inventoryRepository.save(inventory); //to be removed
             existing.setApprovedWeight(approved.getApprovedWeight());
             existing.setApprovedPieces(approved.getApprovedPieces());
         }
@@ -303,7 +305,7 @@ public class WarehouseService {
 
             // Deduct from inventory
             inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
-            inventory.setPieces(availablePieces - item.getApprovedPieces());
+//            inventory.setPieces(availablePieces - item.getApprovedPieces()); //to be activated
             inventory.setLastUpdated(LocalDateTime.now());
             inventoryRepository.save(inventory);
 
