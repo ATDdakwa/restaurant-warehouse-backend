@@ -2,8 +2,10 @@
 package com.vozhe.jwt.controller.warehouse;
 
 import com.vozhe.jwt.enums.DistributionStatus;
+import com.vozhe.jwt.exceptions.InvalidInputException;
 import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.payload.request.PaymentDto;
+import com.vozhe.jwt.repository.warehouse.DistributionRepository;
 import com.vozhe.jwt.repository.warehouse.InventoryRepository;
 import com.vozhe.jwt.service.warehouse.WarehouseService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class WarehouseController {
 
     private final WarehouseService warehouseService;
     private final InventoryRepository inventoryRepository;
+    private final DistributionRepository distributionRepository;
 
     // Supplier endpoints
     @PostMapping("/suppliers")
@@ -154,6 +157,24 @@ public class WarehouseController {
         return ResponseEntity.ok(
                 warehouseService.approveDistribution(id, approvedItems)
         );
+    }
+    @PutMapping("/distribution/{id}")
+    public ResponseEntity<Distribution> updateDistribution(
+            @PathVariable Long id,
+            @RequestBody Distribution distribution
+    ) {
+        // Only allow editing REQUESTED or APPROVED (by admin)
+        Distribution existing = distributionRepository.findById(id)
+                .orElseThrow(() -> new InvalidInputException("Distribution not found"));
+
+        if (existing.getStatus() != DistributionStatus.REQUESTED &&
+                existing.getStatus() != DistributionStatus.APPROVED) {
+            throw new InvalidInputException("Cannot edit distribution in " + existing.getStatus() + " status");
+        }
+
+        existing.setItems(distribution.getItems());
+        return null;
+//                ResponseEntity.ok(distributionRepository.save(existing));
     }
 
     /* ================= STOCK CONTROLLER ================= */
