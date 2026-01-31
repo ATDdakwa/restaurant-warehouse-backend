@@ -75,8 +75,10 @@ public class ProcessingService {
     private void validateProcessingInput(Processing processing, Receiving receiving) {
         double remainingWeight = receiving.getTotalWeight() - receiving.getProcessedWeight();
         int remainingQuantity = receiving.getQuantity() - receiving.getProcessedQuantity();
+        // Use epsilon comparison for floating point numbers
+        final double EPSILON = 0.01; // 10 grams tolerance
 
-        if (processing.getWeight() > remainingWeight) {
+        if (processing.getWeight() - remainingWeight > EPSILON) {
             throw new InvalidInputException("Processing weight cannot be greater than the remaining weight in the batch.");
         }
         if (processing.getQuantity() > remainingQuantity) {
