@@ -247,26 +247,24 @@ public class WarehouseService {
         Distribution distribution = distributionRepository.findById(id)
                 .orElseThrow(() -> new InvalidInputException("Distribution not found"));
 
-        if (distribution.getStatus() != DistributionStatus.REQUESTED) {
-            throw new InvalidInputException("Only REQUESTED distributions can be approved");
+        // Allow both REQUESTED and APPROVED status (for re-approval)
+        if (distribution.getStatus() != DistributionStatus.REQUESTED &&
+                distribution.getStatus() != DistributionStatus.APPROVED) {
+            throw new InvalidInputException("Only REQUESTED or APPROVED distributions can be (re-)approved");
         }
 
         for (DistributionItem approved : approvedItems) {
-            Inventory inventory = inventoryRepository.findById(approved.getInventoryId())
-                    .orElseThrow(() -> new InvalidInputException("Inventory item not found")); //removed
             DistributionItem existing = distribution.getItems().stream()
                     .filter(i -> i.getId().equals(approved.getId()))
                     .findFirst()
                     .orElseThrow(() -> new InvalidInputException("Item not found"));
 
-            inventory.setPieces(inventory.getPieces() - approved.getRequestedPieces()); ////removed
-            inventoryRepository.save(inventory); //to be removed
             existing.setApprovedWeight(approved.getApprovedWeight());
             existing.setApprovedPieces(approved.getApprovedPieces());
         }
 
         distribution.setStatus(DistributionStatus.APPROVED);
-        distribution.setApprovedAt(LocalDateTime.now());
+        distribution.setApprovedAt(LocalDateTime.now()); // Updates timestamp on re-approval
 
         return distributionRepository.save(distribution);
     }
@@ -298,14 +296,14 @@ public class WarehouseService {
                 throw new InvalidInputException("Insufficient stock for " + item.getCut());
             }
 
-//            int availablePieces = inventory.getPieces() != null ? inventory.getPieces() : 0;
-//            if (availablePieces < item.getApprovedPieces()) {
-//                throw new InvalidInputException("Insufficient pieces for " + item.getCut());
-//            }
+            int availablePieces = inventory.getPieces() != null ? inventory.getPieces() : 0;
+            if (availablePieces < item.getApprovedPieces()) {
+                throw new InvalidInputException("Insufficient pieces for " + item.getCut());
+            }
 
             // Deduct from inventory
             inventory.setWeight(inventory.getWeight() - item.getApprovedWeight());
-//            inventory.setPieces(availablePieces - item.getApprovedPieces()); //to be activated
+            inventory.setPieces(availablePieces - item.getApprovedPieces());
             inventory.setLastUpdated(LocalDateTime.now());
             inventoryRepository.save(inventory);
 

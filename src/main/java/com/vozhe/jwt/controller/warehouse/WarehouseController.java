@@ -161,20 +161,29 @@ public class WarehouseController {
     @PutMapping("/distribution/{id}")
     public ResponseEntity<Distribution> updateDistribution(
             @PathVariable Long id,
-            @RequestBody Distribution distribution
+            @RequestBody Distribution updatedDistribution
     ) {
-        // Only allow editing REQUESTED or APPROVED (by admin)
         Distribution existing = distributionRepository.findById(id)
                 .orElseThrow(() -> new InvalidInputException("Distribution not found"));
 
-        if (existing.getStatus() != DistributionStatus.REQUESTED &&
-                existing.getStatus() != DistributionStatus.APPROVED) {
-            throw new InvalidInputException("Cannot edit distribution in " + existing.getStatus() + " status");
+        // Only allow editing REQUESTED status
+        // APPROVED status should use the /approve endpoint instead
+        if (existing.getStatus() != DistributionStatus.REQUESTED) {
+            throw new InvalidInputException(
+                    "Only REQUESTED distributions can be edited. Use the approval endpoint to adjust approved quantities."
+            );
         }
 
-        existing.setItems(distribution.getItems());
-        return null;
-//                ResponseEntity.ok(distributionRepository.save(existing));
+        // Preserve metadata
+        updatedDistribution.setId(id);
+        updatedDistribution.setStatus(existing.getStatus());
+        updatedDistribution.setRequestedAt(existing.getRequestedAt());
+        updatedDistribution.setApprovedAt(existing.getApprovedAt());
+        updatedDistribution.setIssuedAt(existing.getIssuedAt());
+        updatedDistribution.setDeliveredAt(existing.getDeliveredAt());
+        updatedDistribution.setReceivedAt(existing.getReceivedAt());
+
+        return ResponseEntity.ok(distributionRepository.save(updatedDistribution));
     }
 
     /* ================= STOCK CONTROLLER ================= */
