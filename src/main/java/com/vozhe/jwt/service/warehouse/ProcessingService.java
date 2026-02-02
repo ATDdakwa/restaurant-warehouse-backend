@@ -135,6 +135,7 @@ public class ProcessingService {
                         newInventory.setPieces(0);
                         newInventory.setStorageLocation(null);
                         newInventory.setExpiryDate(LocalDate.now().plusDays(5));
+                        newInventory.setReceivedDate(processing.getProcessedDate());
                         newInventory.setCostPerKg(costPerKg);
                         newInventory.setStatus("available");
                         newInventory.setSourceBatches(processing.getBatchNumber()); // Initialize with first batch

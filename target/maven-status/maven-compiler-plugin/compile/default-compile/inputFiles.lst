@@ -5,6 +5,7 @@
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/settings/PaymentType.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/OutputCut.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/warehouse/Supplier.java
+/Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/warehouse/ProductInventory.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/controller/settings/GlobalSettingsController.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/repository/MeatRepository.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/enums/MeatType.java
@@ -45,6 +46,7 @@
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/StockTakeRecord.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/products/ProductType.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/repository/StockTakeRecordRepository.java
+/Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/repository/warehouse/ProductInventoryRepository.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/payload/request/JwtTokenRequest.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/models/warehouse/Inventory.java
 /Users/adakwa/Documents/Development/React/FoodBox Warehouse/RestaurantWarehouse/src/main/java/com/vozhe/jwt/controller/products/ProductTypeController.java

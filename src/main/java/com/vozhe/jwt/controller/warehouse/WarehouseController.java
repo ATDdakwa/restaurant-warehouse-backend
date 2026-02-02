@@ -102,6 +102,11 @@ public class WarehouseController {
         return ResponseEntity.ok(warehouseService.getAllInventories());
     }
 
+    @GetMapping("/product-inventory")
+    public ResponseEntity<List<ProductInventory>> getAllProductInventories() {
+        return ResponseEntity.ok(warehouseService.getAllProductInventories());
+    }
+
     // Add this temporary endpoint to see current state
     @GetMapping("/inventory/analysis")
     public ResponseEntity<?> analyzeInventory() {

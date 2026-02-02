@@ -4,6 +4,7 @@ package com.vozhe.jwt.service.warehouse;
 import com.vozhe.jwt.enums.DistributionStatus;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.enums.ProcessingStatus;
+import com.vozhe.jwt.enums.StorageLocation;
 import com.vozhe.jwt.exceptions.InvalidInputException;
 import com.vozhe.jwt.models.Meat;
 import com.vozhe.jwt.models.settings.GlobalSettings;
@@ -36,6 +37,7 @@ public class WarehouseService {
     private final ProcessingRepository processingRepository;
     private final GlobalSettingsService globalSettingsService;
     private final MeatRepository meatRepository;
+    private final ProductInventoryRepository productInventoryRepository;
 
 
     // Supplier actions
@@ -66,15 +68,8 @@ public class WarehouseService {
     }
 
     // Receiving actions
+    @Transactional
     public Receiving saveReceiving(Receiving receiving) {
-
-        // Convert string to Meat entity
-        if (receiving.getMeatTypeName() != null) {
-            Meat meat = meatRepository.findByName(receiving.getMeatTypeName())
-                    .orElseThrow(() -> new RuntimeException("Meat type not found: " + receiving.getMeatTypeName()));
-            receiving.setMeatType(meat);
-        }
-
         // Business logic for receiving
         if (receiving.getSupplierId() == null) {
             throw new InvalidInputException("Supplier ID is required");
@@ -82,10 +77,63 @@ public class WarehouseService {
         supplierRepository.findById(Long.parseLong(receiving.getSupplierId()))
                 .orElseThrow(() -> new InvalidInputException("Supplier not found"));
 
-        if (receiving.getQuantity() <= 0 || receiving.getTotalWeight() <= 0) {
-            throw new InvalidInputException("Quantity and total weight must be positive");
+        // Differentiate between meat and non-meat products
+        if (receiving.getProductType() != null && "meats".equalsIgnoreCase(receiving.getProductType())) {
+            // Meat product logic
+            if (receiving.getMeatTypeName() != null) {
+                Meat meat = meatRepository.findByName(receiving.getMeatTypeName())
+                        .orElseThrow(() -> new RuntimeException("Meat type not found: " + receiving.getMeatTypeName()));
+                receiving.setMeatType(meat);
+            }
+            if (receiving.getQuantity() <= 0 || receiving.getTotalWeight() <= 0) {
+                throw new InvalidInputException("Quantity and total weight must be positive");
+            }
+            receiving.setAverageWeight(receiving.getTotalWeight() / receiving.getQuantity());
+            receiving.setStorageLocation(StorageLocation.ColdRoomFreezer);
+
+            // DO NOT save to ProductInventory for meats
+            // Meats are tracked separately in the meat inventory system
         }
-        receiving.setAverageWeight(receiving.getTotalWeight() / receiving.getQuantity());
+        else if (receiving.getProductType() != null && !receiving.getProductType().isEmpty()) {
+            // Non-meat product logic - ONLY for non-meat products
+            if (receiving.getQuantity() <= 0) {
+                throw new InvalidInputException("Quantity must be positive");
+            }
+
+            // Check if product already exists in inventory by productId and productName
+            Optional<ProductInventory> existingInventory = productInventoryRepository
+                    .findByProductIdAndProductName(receiving.getProductId(), receiving.getProductName());
+
+            if (existingInventory.isPresent()) {
+                // Update existing inventory - add to quantity
+                ProductInventory inventory = existingInventory.get();
+                inventory.setQuantity(inventory.getQuantity() + receiving.getQuantity());
+                // Update other fields that might have changed
+                inventory.setPrice(receiving.getCost());
+                inventory.setReceivingDate(receiving.getDeliveryDate());
+                inventory.setSupplierName(receiving.getSupplierName());
+                inventory.setExpiryDate(LocalDate.now().plusDays(30));
+                productInventoryRepository.save(inventory);
+            } else {
+                // Create new ProductInventory record
+                ProductInventory productInventory = new ProductInventory();
+                productInventory.setProductId(receiving.getProductId());
+                productInventory.setProductName(receiving.getProductName());
+                productInventory.setQuantity(receiving.getQuantity());
+                productInventory.setUnit("each");
+                productInventory.setPrice(receiving.getCost());
+                productInventory.setReceivingDate(receiving.getDeliveryDate());
+                productInventory.setBatchNumber(receiving.getBatchNumber());
+                productInventory.setSupplierId(receiving.getSupplierId());
+                productInventory.setSupplierName(receiving.getSupplierName());
+                productInventory.setStorageLocation(StorageLocation.DryGoodsWarehouse);
+                productInventory.setExpiryDate(LocalDate.now().plusDays(30));
+                productInventory.setStatus("available");
+                productInventoryRepository.save(productInventory);
+            }
+        }
+
+        // Save the receiving record for auditing (this saves for BOTH meat and non-meat)
         return receivingRepository.save(receiving);
     }
 
@@ -160,6 +208,10 @@ public class WarehouseService {
 
     public List<Receiving> getAllCreditReceiving() {
         return receivingRepository.findByPaymentType("CREDIT");
+    }
+
+    public List<ProductInventory> getAllProductInventories() {
+        return productInventoryRepository.findAll();
     }
 
     // WarehouseService.java

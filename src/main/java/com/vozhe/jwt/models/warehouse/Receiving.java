@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.vozhe.jwt.enums.MeatType;
 import com.vozhe.jwt.enums.ProcessingStatus;
 import com.vozhe.jwt.enums.QualityStatus;
+import com.vozhe.jwt.enums.StorageLocation;
 import com.vozhe.jwt.models.Base;
 import com.vozhe.jwt.models.Meat;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,8 @@ public class Receiving extends Base {
     private String productType;  // To store the type (e.g., "meats", "1" for Dry Goods, etc.)
     private String productId;    // To store the actual product ID when it's not meat
     private String productName;  // To store the product name for display purposes
+    private StorageLocation storageLocation;
+    private LocalDate expiryDate;
 
     private LocalDate deliveryDate;
     private String batchNumber;
