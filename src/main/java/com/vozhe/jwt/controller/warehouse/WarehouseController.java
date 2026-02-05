@@ -7,6 +7,7 @@ import com.vozhe.jwt.models.warehouse.*;
 import com.vozhe.jwt.payload.request.PaymentDto;
 import com.vozhe.jwt.repository.warehouse.DistributionRepository;
 import com.vozhe.jwt.repository.warehouse.InventoryRepository;
+import com.vozhe.jwt.service.warehouse.DryGoodsDistributionService;
 import com.vozhe.jwt.service.warehouse.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ public class WarehouseController {
     private final WarehouseService warehouseService;
     private final InventoryRepository inventoryRepository;
     private final DistributionRepository distributionRepository;
+    private final DryGoodsDistributionService dryGoodsDistributionService;
 
     // Supplier endpoints
     @PostMapping("/suppliers")
@@ -230,6 +232,45 @@ public class WarehouseController {
     public ResponseEntity<Void> deleteRequested() {
         warehouseService.deleteByStatus( DistributionStatus.REQUESTED);
         return ResponseEntity.noContent().build();
+    }
+
+    // NEW DRY GOODS ENDPOINTS
+    @PostMapping("/distribution/dry-goods")
+    public ResponseEntity<DryGoodsDistribution> createDryGoodsDistribution(
+            @RequestBody DryGoodsDistribution distribution) {
+        return ResponseEntity.ok(dryGoodsDistributionService.requestDistribution(distribution));
+    }
+
+    @GetMapping("/distribution/dry-goods")
+    public ResponseEntity<List<DryGoodsDistribution>> getAllDryGoodsDistributions() {
+        return ResponseEntity.ok(dryGoodsDistributionService.getAllDistributions());
+    }
+
+    @PutMapping("/distribution/dry-goods/{id}/approve")
+    public ResponseEntity<DryGoodsDistribution> approveDryGoodsDistribution(
+            @PathVariable Long id,
+            @RequestBody List<DryGoodsDistributionItem> approvedItems) {
+        return ResponseEntity.ok(dryGoodsDistributionService.approveDistribution(id, approvedItems));
+    }
+
+    @PutMapping("/distribution/dry-goods/{id}/issue")
+    public ResponseEntity<DryGoodsDistribution> issueDryGoodsDistribution(@PathVariable Long id) {
+        return ResponseEntity.ok(dryGoodsDistributionService.issueDistribution(id));
+    }
+
+    @PutMapping("/distribution/dry-goods/{id}/acknowledge")
+    public ResponseEntity<DryGoodsDistribution> acknowledgeDryGoodsDelivery(@PathVariable Long id) {
+        return ResponseEntity.ok(dryGoodsDistributionService.acknowledgeDelivery(id));
+    }
+
+    @PutMapping("/distribution/dry-goods/{id}/deliver")
+    public ResponseEntity<DryGoodsDistribution> confirmDryGoodsDelivery(@PathVariable Long id) {
+        return ResponseEntity.ok(dryGoodsDistributionService.confirmDelivery(id));
+    }
+
+    @PutMapping("/distribution/dry-goods/{id}/receive")
+    public ResponseEntity<DryGoodsDistribution> confirmDryGoodsReceipt(@PathVariable Long id) {
+        return ResponseEntity.ok(dryGoodsDistributionService.confirmReceipt(id));
     }
 
     @GetMapping("/reports")

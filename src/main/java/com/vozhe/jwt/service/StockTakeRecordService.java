@@ -1,7 +1,9 @@
 package com.vozhe.jwt.service;
 
 import com.vozhe.jwt.models.StockTakeRecord;
+import com.vozhe.jwt.models.warehouse.Inventory;
 import com.vozhe.jwt.repository.StockTakeRecordRepository;
+import com.vozhe.jwt.repository.warehouse.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -10,14 +12,28 @@ import javax.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class StockTakeRecordService {
 
     private final StockTakeRecordRepository stockTakeRecordRepository;
+    private final InventoryRepository inventoryRepository;
 
     public List<StockTakeRecord> saveStockTakeRecords(List<StockTakeRecord> records) {
+        for (StockTakeRecord request : records) {
+            Optional<Inventory> optionalInventory = inventoryRepository.findById(Long.valueOf(request.getItemId()));
+            if (optionalInventory.isPresent()) {
+                Inventory inventory = optionalInventory.get();
+                inventory.setPieces(request.getActualPieces());
+                inventory.setWeight(request.getActualWeight());
+                inventoryRepository.save(inventory);
+            } else {
+                // TODO: Handle case where MeatsInventory item is not found (e.g., log, throw exception)
+                System.err.println("Inventory with ID " + request.getItemId() + " not found for stock take.");
+            }
+        }
         return stockTakeRecordRepository.saveAll(records);
     }
 

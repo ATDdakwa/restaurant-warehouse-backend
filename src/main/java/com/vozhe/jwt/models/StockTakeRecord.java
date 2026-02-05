@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,6 +21,8 @@ public class StockTakeRecord {
 
     private String itemId; // ID of InventoryItem or ReceivingRecord
     private String itemType; // "PROCESSED" or "UNPROCESSED"
+    private String meatName;
+    private String cut;
 
     private double systemWeight;
     private double actualWeight;
