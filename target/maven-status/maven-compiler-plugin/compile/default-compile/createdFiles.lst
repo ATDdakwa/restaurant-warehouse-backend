@@ -1,5 +1,6 @@
 com/vozhe/jwt/repository/warehouse/DistributionRepository.class
 com/vozhe/jwt/controller/warehouse/ProcessingController.class
+com/vozhe/jwt/repository/warehouse/DryGoodsDistributionRepository.class
 com/vozhe/jwt/controller/reports/ReportController.class
 com/vozhe/jwt/models/settings/GlobalSettings.class
 com/vozhe/jwt/models/UserDetail.class
@@ -9,11 +10,13 @@ com/vozhe/jwt/service/warehouse/ProcessingService.class
 com/vozhe/jwt/controller/StockTakeController.class
 com/vozhe/jwt/config/JwtRequestFilter.class
 com/vozhe/jwt/enums/MeatType.class
+com/vozhe/jwt/payload/request/DryGoodsStockTakeRequest.class
 com/vozhe/jwt/repository/UserRepository.class
 com/vozhe/jwt/models/UserRole.class
 com/vozhe/jwt/models/Meat.class
 com/vozhe/jwt/enums/MaritalStatus.class
 com/vozhe/jwt/models/warehouse/Inventory.class
+com/vozhe/jwt/enums/RequisitionType.class
 com/vozhe/jwt/enums/AccessLevel.class
 com/vozhe/jwt/payload/response/ReportsData.class
 com/vozhe/jwt/service/settings/PaymentSettingsService.class
@@ -22,11 +25,13 @@ com/vozhe/jwt/controller/settings/GlobalSettingsController.class
 com/vozhe/jwt/repository/warehouse/SupplierRepository.class
 com/vozhe/jwt/enums/DistributionStatus.class
 com/vozhe/jwt/controller/products/ProductController.class
+com/vozhe/jwt/repository/warehouse/DryGoodsStockTakeRecordRepository.class
 com/vozhe/jwt/payload/request/PaymentSettingsDTO.class
 com/vozhe/jwt/repository/warehouse/ProcessingRepository.class
 com/vozhe/jwt/models/warehouse/Processing.class
 com/vozhe/jwt/models/warehouse/DistributionItem.class
 com/vozhe/jwt/config/JwtTokenUtil.class
+com/vozhe/jwt/service/warehouse/DryGoodsDistributionService.class
 com/vozhe/jwt/repository/warehouse/InventoryRepository.class
 com/vozhe/jwt/models/products/Product.class
 com/vozhe/jwt/enums/BeefCut.class
@@ -55,6 +60,8 @@ com/vozhe/jwt/service/Impl/products/ProductService.class
 com/vozhe/jwt/models/OutputCut.class
 com/vozhe/jwt/controller/UserController.class
 com/vozhe/jwt/enums/QualityStatus.class
+com/vozhe/jwt/models/DryGoodsStockTakeRecord.class
+com/vozhe/jwt/models/warehouse/DryGoodsDistributionItem.class
 com/vozhe/jwt/payload/response/JwtTokenResponse.class
 com/vozhe/jwt/models/BaseEntity.class
 com/vozhe/jwt/service/AccountCreationService.class
@@ -74,12 +81,14 @@ com/vozhe/jwt/service/MeatService.class
 com/vozhe/jwt/JwtApplication.class
 com/vozhe/jwt/models/warehouse/ProductInventory.class
 com/vozhe/jwt/controller/GeneralController.class
+com/vozhe/jwt/service/ProductInventoryService.class
 com/vozhe/jwt/enums/Gender.class
 com/vozhe/jwt/payload/request/PaymentDto.class
 com/vozhe/jwt/controller/settings/PaymentSettingsController.class
 com/vozhe/jwt/repository/warehouse/ReceivingRepository.class
 com/vozhe/jwt/controller/MeatController.class
 com/vozhe/jwt/service/Impl/products/ProductTypeService.class
+com/vozhe/jwt/controller/warehouse/ProductInventoryController.class
 com/vozhe/jwt/service/reports/ReportService.class
 com/vozhe/jwt/exceptions/UserExistsException.class
 com/vozhe/jwt/models/warehouse/ProcessingOutput.class
@@ -91,6 +100,7 @@ com/vozhe/jwt/service/warehouse/WarehouseService.class
 com/vozhe/jwt/repository/StockTakeRecordRepository.class
 com/vozhe/jwt/config/SecurityConfig$WebConfig.class
 com/vozhe/jwt/service/reports/DailyConsumptionReportRow.class
+com/vozhe/jwt/models/warehouse/DryGoodsDistribution.class
 com/vozhe/jwt/enums/ProcessingStatus.class
 com/vozhe/jwt/controller/products/ProductController$ProductRequest.class
 com/vozhe/jwt/repository/settings/GlobalSettingsRepository.class
